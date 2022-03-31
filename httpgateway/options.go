@@ -18,14 +18,15 @@ package httpgateway
 import (
 	"errors"
 	"fmt"
-	"github.com/liangdas/mqant/module"
-	"github.com/liangdas/mqant/registry"
-	"github.com/liangdas/mqant/selector"
 	"math/rand"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/jarekzha/mqant/module"
+	"github.com/jarekzha/mqant/registry"
+	"github.com/jarekzha/mqant/selector"
 )
 
 // Service represents an API service

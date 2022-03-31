@@ -2,8 +2,9 @@ package server
 
 import (
 	"context"
-	"github.com/liangdas/mqant/registry"
 	"time"
+
+	"github.com/jarekzha/mqant/registry"
 )
 
 // Options Options

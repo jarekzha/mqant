@@ -19,11 +19,12 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/liangdas/mqant/gate"
-	"github.com/liangdas/mqant/log"
-	"github.com/pkg/errors"
 	"strings"
 	"sync"
+
+	"github.com/jarekzha/mqant/gate"
+	"github.com/jarekzha/mqant/log"
+	"github.com/pkg/errors"
 )
 
 type handler struct {

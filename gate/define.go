@@ -16,9 +16,10 @@
 package gate
 
 import (
-	"github.com/liangdas/mqant/log"
-	"github.com/liangdas/mqant/network"
 	"time"
+
+	"github.com/jarekzha/mqant/log"
+	"github.com/jarekzha/mqant/network"
 )
 
 // RPCParamSessionType gate.session 类型

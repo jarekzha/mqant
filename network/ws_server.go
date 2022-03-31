@@ -18,7 +18,7 @@ package network
 //
 //import (
 //	"crypto/tls"
-//	"github.com/liangdas/mqant/log"
+//	"github.com/jarekzha/mqant/log"
 //	"net"
 //	"net/http"
 //	"sync"

@@ -17,10 +17,11 @@ package basemodule
 
 import (
 	"context"
-	"github.com/liangdas/mqant/module"
-	"github.com/liangdas/mqant/registry"
-	"github.com/liangdas/mqant/rpc"
-	"github.com/liangdas/mqant/rpc/base"
+
+	"github.com/jarekzha/mqant/module"
+	"github.com/jarekzha/mqant/registry"
+	mqrpc "github.com/jarekzha/mqant/rpc"
+	defaultrpc "github.com/jarekzha/mqant/rpc/base"
 )
 
 // NewServerSession 创建一个节点实例

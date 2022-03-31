@@ -3,10 +3,10 @@ package module
 import (
 	"time"
 
-	"github.com/liangdas/mqant/registry"
-	mqrpc "github.com/liangdas/mqant/rpc"
-	rpcpb "github.com/liangdas/mqant/rpc/pb"
-	"github.com/liangdas/mqant/selector"
+	"github.com/jarekzha/mqant/registry"
+	mqrpc "github.com/jarekzha/mqant/rpc"
+	rpcpb "github.com/jarekzha/mqant/rpc/pb"
+	"github.com/jarekzha/mqant/selector"
 	"github.com/nats-io/nats.go"
 )
 

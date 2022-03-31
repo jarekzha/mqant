@@ -18,12 +18,12 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/liangdas/mqant/conf"
-	"github.com/liangdas/mqant/gate"
-	"github.com/liangdas/mqant/log"
-	"github.com/liangdas/mqant/module"
-	"github.com/liangdas/mqant/module/base"
-	"github.com/liangdas/mqant/network"
+	"github.com/jarekzha/mqant/conf"
+	"github.com/jarekzha/mqant/gate"
+	"github.com/jarekzha/mqant/log"
+	"github.com/jarekzha/mqant/module"
+	basemodule "github.com/jarekzha/mqant/module/base"
+	"github.com/jarekzha/mqant/network"
 )
 
 var RPCParamSessionType = gate.RPCParamSessionType

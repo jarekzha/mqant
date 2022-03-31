@@ -2,9 +2,10 @@ package timewheel
 
 import (
 	"container/list"
-	"github.com/liangdas/mqant/log"
 	"math"
 	"time"
+
+	"github.com/jarekzha/mqant/log"
 )
 
 var timeWheel *TimeWheel

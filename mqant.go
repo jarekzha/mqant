@@ -16,8 +16,8 @@
 package mqant
 
 import (
-	"github.com/liangdas/mqant/app"
-	"github.com/liangdas/mqant/module"
+	"github.com/jarekzha/mqant/app"
+	"github.com/jarekzha/mqant/module"
 )
 
 //CreateApp 创建mqant的app实例

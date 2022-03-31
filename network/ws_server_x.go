@@ -2,15 +2,16 @@ package network
 
 import (
 	"crypto/tls"
-	"github.com/liangdas/mqant/log"
-	"github.com/liangdas/mqant/utils/ip"
-	"golang.org/x/net/websocket"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/jarekzha/mqant/log"
+	iptool "github.com/jarekzha/mqant/utils/ip"
+	"golang.org/x/net/websocket"
 )
 
 // WSServer websocket服务器

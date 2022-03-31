@@ -17,10 +17,11 @@ package module
 
 import (
 	"context"
-	"github.com/liangdas/mqant/conf"
-	"github.com/liangdas/mqant/registry"
-	"github.com/liangdas/mqant/rpc"
-	"github.com/liangdas/mqant/selector"
+
+	"github.com/jarekzha/mqant/conf"
+	"github.com/jarekzha/mqant/registry"
+	mqrpc "github.com/jarekzha/mqant/rpc"
+	"github.com/jarekzha/mqant/selector"
 	"github.com/nats-io/nats.go"
 )
 

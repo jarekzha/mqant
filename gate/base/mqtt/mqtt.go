@@ -19,8 +19,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/liangdas/mqant/log"
 	"io"
+
+	"github.com/jarekzha/mqant/log"
 )
 
 const (

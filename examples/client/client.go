@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 
-	"github.com/liangdas/mqant"
-	"github.com/liangdas/mqant/conf"
-	"github.com/liangdas/mqant/examples/proto/examples/greeter"
-	"github.com/liangdas/mqant/log"
-	"github.com/liangdas/mqant/module"
-	basemodule "github.com/liangdas/mqant/module/base"
+	"github.com/jarekzha/mqant"
+	"github.com/jarekzha/mqant/conf"
+	"github.com/jarekzha/mqant/examples/proto/examples/greeter"
+	"github.com/jarekzha/mqant/log"
+	"github.com/jarekzha/mqant/module"
+	basemodule "github.com/jarekzha/mqant/module/base"
 )
 
 func main() {

@@ -15,16 +15,17 @@ package defaultrpc
 
 import (
 	"fmt"
-	"google.golang.org/protobuf/proto"
-	"github.com/liangdas/mqant/log"
-	"github.com/liangdas/mqant/module"
-	"github.com/liangdas/mqant/rpc"
-	"github.com/liangdas/mqant/rpc/pb"
-	"github.com/liangdas/mqant/utils"
-	"github.com/nats-io/nats.go"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/jarekzha/mqant/log"
+	"github.com/jarekzha/mqant/module"
+	mqrpc "github.com/jarekzha/mqant/rpc"
+	rpcpb "github.com/jarekzha/mqant/rpc/pb"
+	mqanttools "github.com/jarekzha/mqant/utils"
+	"github.com/nats-io/nats.go"
+	"google.golang.org/protobuf/proto"
 )
 
 type NatsClient struct {

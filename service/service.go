@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/liangdas/mqant/log"
-	"github.com/liangdas/mqant/server"
+	"github.com/jarekzha/mqant/log"
+	"github.com/jarekzha/mqant/server"
 )
 
 // NewService NewService
