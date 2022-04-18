@@ -49,7 +49,7 @@ func (gt *Gate) SetJudgeGuest(judgeGuest func(session gate.Session) bool) error 
 }
 
 /**
-设置Session信息持久化接口
+设置Session路由处理器
 */
 func (gt *Gate) SetRouteHandler(router gate.RouteHandler) error {
 	gt.opts.RouteHandler = router
