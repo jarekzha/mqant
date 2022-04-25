@@ -73,14 +73,10 @@ type packAndType struct {
 
 // Init a pack queue
 func NewPackQueue(conf conf.Mqtt, r *bufio.Reader, w *bufio.Writer, conn network.Conn, recover func(pAndErr *packAndErr) (err error), alive, MaxPackSize int) *PackQueue {
-	if alive < 1 {
-		alive = conf.ReadTimeout
-	}
 	if MaxPackSize < 1 {
 		MaxPackSize = 65535
 	}
-	alive = int(float32(alive)*1.5 + 1)
-	return &PackQueue{
+	queue := &PackQueue{
 		conf:        conf,
 		alive:       alive,
 		MaxPackSize: MaxPackSize,
@@ -91,6 +87,9 @@ func NewPackQueue(conf conf.Mqtt, r *bufio.Reader, w *bufio.Writer, conn network
 		fch:         make(chan struct{}, 256),
 		status:      CONNECTED,
 	}
+	queue.SetAlive(alive)
+
+	return queue
 }
 
 func (queue *PackQueue) isConnected() bool {
@@ -172,13 +171,7 @@ func (queue *PackQueue) ReadPackInLoop() {
 loop:
 	for queue.isConnected() {
 		if queue.alive > 0 {
-			timeout := int(float64(queue.alive) * 3)
-			if timeout > 60 {
-				timeout = 60
-			} else if timeout < 10 {
-				timeout = 10
-			}
-			queue.conn.SetDeadline(time.Now().Add(time.Second * time.Duration(timeout)))
+			queue.conn.SetDeadline(time.Now().Add(time.Second * time.Duration(queue.alive)))
 		} else {
 			queue.conn.SetDeadline(time.Now().Add(time.Second * 90))
 		}
@@ -195,7 +188,7 @@ loop:
 		p = new(packAndErr)
 	}
 
-	//log.Info("read_loop Groutine will esc.")
+	// log.Info("read_loop Groutine will esc.")
 }
 func (queue *PackQueue) CloseFch() {
 	defer func() {
