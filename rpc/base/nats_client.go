@@ -224,8 +224,6 @@ func (c *NatsClient) Unmarshal(data []byte) (*rpcpb.RPCInfo, error) {
 	} else {
 		return &rpcInfo, err
 	}
-
-	panic("bug")
 }
 
 // goroutine safe
