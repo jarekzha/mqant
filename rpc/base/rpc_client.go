@@ -93,7 +93,9 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, ArgsType []strin
 		return nil, err.Error()
 	}
 	if ctx == nil {
-		ctx, _ = context.WithTimeout(context.TODO(), c.app.Options().RPCExpired)
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(context.TODO(), c.app.Options().RPCExpired)
+		defer cancel()
 	}
 	select {
 	case resultInfo, ok := <-callback:

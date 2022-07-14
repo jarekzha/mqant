@@ -304,7 +304,7 @@ func (age *agent) recoverworker(pack *mqtt.Pack) {
 				}
 				return
 			}
-			if len(pub.GetMsg())>0&&pub.GetMsg()[0] == '{' && pub.GetMsg()[len(pub.GetMsg())-1] == '}' {
+			if len(pub.GetMsg()) > 0 && pub.GetMsg()[0] == '{' && pub.GetMsg()[len(pub.GetMsg())-1] == '}' {
 				//尝试解析为json为map
 				var obj interface{} // var obj map[string]interface{}
 				err := json.Unmarshal(pub.GetMsg(), &obj)
@@ -329,7 +329,8 @@ func (age *agent) recoverworker(pack *mqtt.Pack) {
 					return
 				}
 				args[0] = b
-				ctx, _ := context.WithTimeout(context.TODO(), age.module.GetApp().Options().RPCExpired)
+				ctx, cancel := context.WithTimeout(context.TODO(), age.module.GetApp().Options().RPCExpired)
+				defer cancel()
 				result, e := serverSession.CallArgs(ctx, topics[1], ArgsType, args)
 				toResult(age, *pub.GetTopic(), result, e)
 			} else {

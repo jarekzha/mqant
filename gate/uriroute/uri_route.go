@@ -121,7 +121,8 @@ func (u *URIRoute) OnRoute(session gate.Session, topic string, msg []byte) (bool
 		bean, err := u.DataParsing(topic, uu, msg)
 		if err == nil && bean != nil {
 			if needreturn {
-				ctx, _ := context.WithTimeout(context.TODO(), u.CallTimeOut)
+				ctx, cancel := context.WithTimeout(context.TODO(), u.CallTimeOut)
+				defer cancel()
 				result, e := serverSession.Call(ctx, _func, session, bean)
 				if e != "" {
 					return needreturn, result, errors.New(e)
@@ -140,7 +141,7 @@ func (u *URIRoute) OnRoute(session gate.Session, topic string, msg []byte) (bool
 	}
 
 	//默认参数
-	if len(msg)>0&&msg[0] == '{' && msg[len(msg)-1] == '}' {
+	if len(msg) > 0 && msg[0] == '{' && msg[len(msg)-1] == '}' {
 		//尝试解析为json为map
 		var obj interface{} // var obj map[string]interface{}
 		err := json.Unmarshal(msg, &obj)
@@ -162,7 +163,8 @@ func (u *URIRoute) OnRoute(session gate.Session, topic string, msg []byte) (bool
 			return needreturn, nil, err
 		}
 		args[0] = b
-		ctx, _ := context.WithTimeout(context.TODO(), u.CallTimeOut)
+		ctx, cancel := context.WithTimeout(context.TODO(), u.CallTimeOut)
+		defer cancel()
 		result, e := serverSession.CallArgs(ctx, _func, ArgsType, args)
 		if e != "" {
 			return needreturn, result, errors.New(e)

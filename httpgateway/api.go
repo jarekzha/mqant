@@ -37,7 +37,9 @@ func (a *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rsp := &go_api.Response{}
-	ctx, _ := context.WithTimeout(context.TODO(), a.Opts.TimeOut)
+	ctx, cancel := context.WithTimeout(context.TODO(), a.Opts.TimeOut)
+	defer cancel()
+
 	if err = mqrpc.Proto(rsp, func() (reply interface{}, errstr interface{}) {
 		return server.SrvSession.Call(ctx, server.Hander, request)
 	}); err != nil {
