@@ -25,8 +25,6 @@ type Server interface {
 	OnDestroy() error
 	String() string
 	ID() string
-	// Deprecated: 因为命名规范问题函数将废弃,请用ID代替
-	Id() string
 }
 
 // Message RPC消息头

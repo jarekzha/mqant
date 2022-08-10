@@ -55,17 +55,9 @@ type Session interface {
 	GetIP() string
 	GetTopic() string
 	GetNetwork() string
-	// Deprecated: 因为命名规范问题函数将废弃,请用GetUserID代替
-	GetUserId() string
 	GetUserID() string
-	GetUserIdInt64() int64
-	// Deprecated: 因为命名规范问题函数将废弃,请用GetUserIDInt64代替
 	GetUserIDInt64() int64
-	// Deprecated: 因为命名规范问题函数将废弃,请用GetSessionID代替
-	GetSessionId() string
 	GetSessionID() string
-	// Deprecated: 因为命名规范问题函数将废弃,请用GetServerID代替
-	GetServerId() string
 	GetServerID() string
 	//SettingsRange 配合一个回调函数进行遍历操作，通过回调函数返回内部遍历出来的值。Range 参数中的回调函数的返回值功能是：需要继续迭代遍历时，返回 true；终止迭代遍历时，返回 false。
 	SettingsRange(func(k, v string) bool)
@@ -76,14 +68,8 @@ type Session interface {
 	SetIP(ip string)
 	SetTopic(topic string)
 	SetNetwork(network string)
-	// Deprecated: 因为命名规范问题函数将废弃,请用SetUserID代替
-	SetUserId(userid string)
 	SetUserID(userid string)
-	// Deprecated: 因为命名规范问题函数将废弃,请用SetSessionID代替
-	SetSessionId(sessionid string)
 	SetSessionID(sessionid string)
-	// Deprecated: 因为命名规范问题函数将废弃,请用SetServerId代替
-	SetServerId(serverid string)
 	SetServerID(serverid string)
 	SetSettings(settings map[string]string)
 	//CloneSettings
@@ -117,14 +103,9 @@ type Session interface {
 	Clone() Session
 
 	CreateTrace()
-	// Deprecated: 因为命名规范问题函数将废弃,请用TraceID代替
-	TraceId() string
 	TraceID() string
 
-	// Span is an ID that probabilistically uniquely identifies this
-	// span.
-	// Deprecated: 因为命名规范问题函数将废弃,请用SpanID代替
-	SpanId() string
+	// Span is an ID that probabilistically uniquely identifies this span.
 	SpanID() string
 
 	ExtractSpan() log.TraceSpan

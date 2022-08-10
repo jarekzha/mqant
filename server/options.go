@@ -64,14 +64,6 @@ func Name(n string) Option {
 	}
 }
 
-// Id Unique server id
-// Deprecated: 因为命名规范问题函数将废弃,请用ID代替
-func Id(id string) Option {
-	return func(o *Options) {
-		o.ID = id
-	}
-}
-
 // ID Unique server id
 func ID(id string) Option {
 	return func(o *Options) {

@@ -50,19 +50,10 @@ func (c *serverSession) GetID() string {
 	return c.node.Id
 }
 
-// Deprecated: 因为命名规范问题函数将废弃,请用GetID代替
-func (c *serverSession) GetId() string {
-	return c.node.Id
-}
 func (c *serverSession) GetName() string {
 	return c.name
 }
 func (c *serverSession) GetRPC() mqrpc.RPCClient {
-	return c.rpc
-}
-
-// Deprecated: 因为命名规范问题函数将废弃,请用GetRPC代替
-func (c *serverSession) GetRpc() mqrpc.RPCClient {
 	return c.rpc
 }
 

@@ -32,12 +32,8 @@ type ProtocolMarshal interface {
 
 // ServerSession 服务代理
 type ServerSession interface {
-	// Deprecated: 因为命名规范问题函数将废弃,请用GetID代替
-	GetId() string
 	GetID() string
 	GetName() string
-	GetRpc() mqrpc.RPCClient
-	// Deprecated: 因为命名规范问题函数将废弃,请用GetRPC代替
 	GetRPC() mqrpc.RPCClient
 	GetApp() App
 	GetNode() *registry.Node
@@ -59,8 +55,6 @@ type App interface {
 	Options() Options
 	Transport() *nats.Conn
 	Registry() registry.Registry
-	// Deprecated: 因为命名规范问题函数将废弃,请用GetServerByID代替
-	GetServerById(id string) (ServerSession, error)
 	GetServerByID(id string) (ServerSession, error)
 	/**
 	filter		 调用者服务类型    moduleType|moduleType@moduleID
@@ -69,13 +63,6 @@ type App interface {
 	GetRouteServer(filter string, opts ...selector.SelectOption) (ServerSession, error) //获取经过筛选过的服务
 	GetServersByType(Type string) []ServerSession
 	GetSettings() conf.Config //获取配置信息
-
-	// Deprecated: 因为命名规范问题函数将废弃,请用Invoke代替
-	RpcInvoke(module RPCModule, moduleType string, _func string, params ...interface{}) (interface{}, string)
-	// Deprecated: 因为命名规范问题函数将废弃,请用InvokeNR代替
-	RpcInvokeNR(module RPCModule, moduleType string, _func string, params ...interface{}) error
-	// Deprecated: 因为命名规范问题函数将废弃,请用Call代替
-	RpcCall(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, string)
 
 	Invoke(module RPCModule, moduleType string, _func string, params ...interface{}) (interface{}, string)
 	InvokeNR(module RPCModule, moduleType string, _func string, params ...interface{}) error
@@ -121,24 +108,12 @@ type Module interface {
 type RPCModule interface {
 	context.Context
 	Module
-	// Deprecated: 因为命名规范问题函数将废弃,请用GetServerID代替
-	GetServerId() string //模块类型
 	GetServerID() string //模块类型
-	// Deprecated: 因为命名规范问题函数将废弃,请用Invoke代替
-	RpcInvoke(moduleType string, _func string, params ...interface{}) (interface{}, string)
 	Invoke(moduleType string, _func string, params ...interface{}) (interface{}, string)
-	// Deprecated: 因为命名规范问题函数将废弃,请用InvokeNR代替
-	RpcInvokeNR(moduleType string, _func string, params ...interface{}) error
 	InvokeNR(moduleType string, _func string, params ...interface{}) error
-	// Deprecated: 因为命名规范问题函数将废弃,请用InvokeArgs代替
-	RpcInvokeArgs(moduleType string, _func string, ArgsType []string, args [][]byte) (interface{}, string)
 	InvokeArgs(moduleType string, _func string, ArgsType []string, args [][]byte) (interface{}, string)
-	// Deprecated: 因为命名规范问题函数将废弃,请用InvokeNRArgs代替
-	RpcInvokeNRArgs(moduleType string, _func string, ArgsType []string, args [][]byte) error
 	InvokeNRArgs(moduleType string, _func string, ArgsType []string, args [][]byte) error
 
-	// Deprecated: 因为命名规范问题函数将废弃,请用Call代替
-	RpcCall(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, string)
 	//	Call 通用RPC调度函数
 	//	ctx 		context.Context 			上下文,可以设置这次请求的超时时间
 	//	moduleType	string 						服务名称

@@ -141,26 +141,10 @@ func SetSendMessageHook(s SendMessageHook) Option {
 	}
 }
 
-//Tls Tls
-// Deprecated: 因为命名规范问题函数将废弃,请用TLS代替
-func Tls(s bool) Option {
-	return func(o *Options) {
-		o.TLS = s
-	}
-}
-
 //TLS TLS
 func TLS(s bool) Option {
 	return func(o *Options) {
 		o.TLS = s
-	}
-}
-
-// TcpAddr tcp监听地址
-// Deprecated: 因为命名规范问题函数将废弃,请用TCPAddr代替
-func TcpAddr(s string) Option {
-	return func(o *Options) {
-		o.TCPAddr = s
 	}
 }
 
