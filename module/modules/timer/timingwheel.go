@@ -96,7 +96,6 @@ func (tw *TimeWheel) Start(closeSig chan bool) {
 			tw.addTask(&task)
 		case key := <-tw.removeTaskChannel:
 			tw.removeTask(key)
-
 		}
 	}
 }

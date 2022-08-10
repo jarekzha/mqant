@@ -32,13 +32,13 @@ func NewModuleManager() (m *ModuleManager) {
 // ModuleManager 模块管理器
 type ModuleManager struct {
 	app     module.App
-	mods    []*DefaultModule
-	runMods []*DefaultModule
+	mods    []*ModuleAgent
+	runMods []*ModuleAgent
 }
 
 // Register 注册模块
 func (mer *ModuleManager) Register(mi module.Module) {
-	md := new(DefaultModule)
+	md := new(ModuleAgent)
 	md.mi = mi
 	md.closeSig = make(chan bool, 1)
 
@@ -47,7 +47,7 @@ func (mer *ModuleManager) Register(mi module.Module) {
 
 // RegisterRunMod 注册需要运行的模块
 func (mer *ModuleManager) RegisterRunMod(mi module.Module) {
-	md := new(DefaultModule)
+	md := new(ModuleAgent)
 	md.mi = mi
 	md.closeSig = make(chan bool, 1)
 

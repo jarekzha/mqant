@@ -24,15 +24,15 @@ import (
 	"github.com/jarekzha/mqant/module"
 )
 
-// DefaultModule 模块结构
-type DefaultModule struct {
+// ModuleAgent 模块结构
+type ModuleAgent struct {
 	mi       module.Module
 	settings *conf.ModuleSettings
 	closeSig chan bool
 	wg       sync.WaitGroup
 }
 
-func run(m *DefaultModule) {
+func run(m *ModuleAgent) {
 	defer func() {
 		if r := recover(); r != nil {
 			if conf.LenStackBuf > 0 {
@@ -48,7 +48,7 @@ func run(m *DefaultModule) {
 	m.wg.Done()
 }
 
-func destroy(m *DefaultModule) {
+func destroy(m *ModuleAgent) {
 	defer func() {
 		if r := recover(); r != nil {
 			if conf.LenStackBuf > 0 {
