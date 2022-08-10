@@ -44,16 +44,6 @@ type BaseModule struct {
 	listener       mqrpc.RPCListener
 }
 
-// GetServerId GetServerId
-// Deprecated: 因为命名规范问题函数将废弃,请用GetServerID代替
-func (m *BaseModule) GetServerId() string {
-	//很关键,需要与配置文件中的Module配置对应
-	if m.service != nil && m.service.Server() != nil {
-		return m.service.Server().ID()
-	}
-	return "no server"
-}
-
 // GetServerID 节点ID
 func (m *BaseModule) GetServerID() string {
 	//很关键,需要与配置文件中的Module配置对应
@@ -190,20 +180,8 @@ func (m *BaseModule) Invoke(moduleType string, _func string, params ...interface
 	return m.App.Invoke(m.GetSubclass(), moduleType, _func, params...)
 }
 
-// RpcInvoke  RpcInvoke
-// Deprecated: 因为命名规范问题函数将废弃,请用Invoke代替
-func (m *BaseModule) RpcInvoke(moduleType string, _func string, params ...interface{}) (result interface{}, err string) {
-	return m.App.Invoke(m.GetSubclass(), moduleType, _func, params...)
-}
-
 // InvokeNR  InvokeNR
 func (m *BaseModule) InvokeNR(moduleType string, _func string, params ...interface{}) (err error) {
-	return m.App.InvokeNR(m.GetSubclass(), moduleType, _func, params...)
-}
-
-// RpcInvokeNR  RpcInvokeNR
-// Deprecated: 因为命名规范问题函数将废弃,请用InvokeNR代替
-func (m *BaseModule) RpcInvokeNR(moduleType string, _func string, params ...interface{}) (err error) {
 	return m.App.InvokeNR(m.GetSubclass(), moduleType, _func, params...)
 }
 
@@ -217,12 +195,6 @@ func (m *BaseModule) InvokeArgs(moduleType string, _func string, ArgsType []stri
 	return server.CallArgs(nil, _func, ArgsType, args)
 }
 
-// RpcInvokeArgs  RpcInvokeArgs
-// Deprecated: 因为命名规范问题函数将废弃,请用RpcInvokeArgs代替
-func (m *BaseModule) RpcInvokeArgs(moduleType string, _func string, ArgsType []string, args [][]byte) (result interface{}, err string) {
-	return m.InvokeArgs(moduleType, _func, ArgsType, args)
-}
-
 // InvokeNRArgs  InvokeNRArgs
 func (m *BaseModule) InvokeNRArgs(moduleType string, _func string, ArgsType []string, args [][]byte) (err error) {
 	server, err := m.App.GetRouteServer(moduleType)
@@ -232,20 +204,8 @@ func (m *BaseModule) InvokeNRArgs(moduleType string, _func string, ArgsType []st
 	return server.CallNRArgs(_func, ArgsType, args)
 }
 
-// RpcInvokeNRArgs  RpcInvokeNRArgs
-// Deprecated: 因为命名规范问题函数将废弃,请用InvokeNRArgs代替
-func (m *BaseModule) RpcInvokeNRArgs(moduleType string, _func string, ArgsType []string, args [][]byte) (err error) {
-	return m.InvokeNRArgs(moduleType, _func, ArgsType, args)
-}
-
 // Call  Call
 func (m *BaseModule) Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, string) {
-	return m.App.Call(ctx, moduleType, _func, param, opts...)
-}
-
-// RpcCall  RpcCall
-// Deprecated: 因为命名规范问题函数将废弃,请用Call代替
-func (m *BaseModule) RpcCall(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, string) {
 	return m.App.Call(ctx, moduleType, _func, param, opts...)
 }
 
