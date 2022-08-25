@@ -21,7 +21,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	rpcpb "github.com/jarekzha/mqant/rpc/pb"
@@ -53,7 +52,7 @@ func NewRPCServer(app module.App, module module.Module) (mqrpc.RPCServer, error)
 
 	nats_server, err := NewNatsServer(app, rpc_server)
 	if err != nil {
-		log.Error("AMQPServer dial fail", zap.Error(err))
+		zap.L().Error("AMQPServer dial fail", zap.Error(err))
 	}
 	rpc_server.nats_server = nats_server
 
@@ -230,7 +229,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 			l := runtime.Stack(buf, false)
 			errstr := string(buf[:l])
 			allError := fmt.Sprintf("%s rpc func(%s) error %s\n ----Stack----\n%s", s.module.GetType(), callInfo.RPCInfo.Fn, rn, errstr)
-			log.Error(allError)
+			zap.S().Error(allError)
 			s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, allError)
 		}
 	}()

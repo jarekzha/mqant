@@ -247,7 +247,7 @@ func (h *handler) Set(span log.TraceSpan, Sessionid string, key string, value st
 	if h.gate.GetStorageHandler() != nil && agent.(gate.Agent).GetSession().GetUserID() != "" {
 		err := h.gate.GetStorageHandler().Storage(agent.(gate.Agent).GetSession())
 		if err != nil {
-			log.Error("Gate session storage fail", zap.Error(err))
+			zap.L().Error("Gate session storage fail", zap.Error(err))
 		}
 	}
 
@@ -269,7 +269,7 @@ func (h *handler) Remove(span log.TraceSpan, Sessionid string, key string) (resu
 	if h.gate.GetStorageHandler() != nil && agent.(gate.Agent).GetSession().GetUserID() != "" {
 		err := h.gate.GetStorageHandler().Storage(agent.(gate.Agent).GetSession())
 		if err != nil {
-			log.Error("Gate session storage fail", zap.Error(err))
+			zap.L().Error("Gate session storage fail", zap.Error(err))
 		}
 	}
 

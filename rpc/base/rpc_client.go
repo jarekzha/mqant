@@ -39,7 +39,7 @@ func NewRPCClient(app module.App, session module.ServerSession) (mqrpc.RPCClient
 	rpc_client.app = app
 	nats_client, err := NewNatsClient(app, session)
 	if err != nil {
-		log.Error("Nats client dial fail", zap.Error(err))
+		zap.L().Error("Nats client dial fail", zap.Error(err))
 		return nil, err
 	}
 	rpc_client.nats_client = nats_client
