@@ -7,12 +7,6 @@ package log
 
 import "go.uber.org/zap"
 
-// Info Info
-func Info(format string, a ...interface{}) {
-	//gLogger.doPrintf(releaseLevel, printReleaseLevel, format, a...)
-	zap.S().Infof(format, a...)
-}
-
 // Error Error
 func Error(format string, a ...interface{}) {
 	//gLogger.doPrintf(errorLevel, printErrorLevel, format, a...)

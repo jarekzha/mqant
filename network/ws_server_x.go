@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jarekzha/mqant/log"
 	iptool "github.com/jarekzha/mqant/utils/ip"
 	"go.uber.org/zap"
 	"golang.org/x/net/websocket"
@@ -133,7 +132,7 @@ func (server *WSServer) Start() {
 		WriteTimeout:   server.HTTPTimeout,
 		MaxHeaderBytes: 1024,
 	}
-	log.Info("WS Listen", zap.String("addr", server.Addr))
+	zap.L().Info("WS Listen", zap.String("addr", server.Addr))
 	go httpServer.Serve(ln)
 }
 

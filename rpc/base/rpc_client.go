@@ -206,7 +206,7 @@ func (c *RPCClient) CallNR(_func string, params ...interface{}) (err error) {
 	start := time.Now()
 	err = c.CallNRArgs(_func, ArgsType, args)
 	if c.app.GetSettings().RPC.Log {
-		log.Info("RPC CallNR",
+		zap.L().Info("RPC CallNR",
 			log.Span(span),
 			zap.String("serverID", c.nats_client.session.GetID()),
 			zap.String("func", _func),
