@@ -25,6 +25,7 @@ import (
 	"github.com/jarekzha/mqant/gate"
 	"github.com/jarekzha/mqant/log"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 type handler struct {
@@ -44,13 +45,13 @@ func NewGateHandler(gate gate.Gate) *handler {
 	return handler
 }
 
-//当连接建立  并且MQTT协议握手成功
+// 当连接建立  并且MQTT协议握手成功
 func (h *handler) Connect(a gate.Agent) {
 	defer func() {
 		if err := recover(); err != nil {
 			buff := make([]byte, 1024)
 			runtime.Stack(buff, false)
-			log.Error("handler Connect panic(%v)\n info:%s", err, string(buff))
+			zap.L().Error("Handler connect panic", zap.Any("err", err), zap.ByteString("info", buff))
 		}
 	}()
 	if a.GetSession() != nil {
@@ -69,13 +70,13 @@ func (h *handler) Connect(a gate.Agent) {
 	}
 }
 
-//当连接关闭	或者客户端主动发送MQTT DisConnect命令
+// 当连接关闭	或者客户端主动发送MQTT DisConnect命令
 func (h *handler) DisConnect(a gate.Agent) {
 	defer func() {
 		if err := recover(); err != nil {
 			buff := make([]byte, 1024)
 			runtime.Stack(buff, false)
-			log.Error("handler DisConnect panic(%v)\n info:%s", err, string(buff))
+			zap.L().Error("Handler disconnect panic", zap.Any("err", err), zap.ByteString("info", buff))
 		}
 		if a.GetSession() != nil {
 			h.sessions.Delete(a.GetSession().GetSessionID())
@@ -162,7 +163,7 @@ func (h *handler) Bind(span log.TraceSpan, Sessionid string, Userid string) (res
 				}
 			} else {
 				//解析持久化数据失败
-				log.Warning("Sesssion Resolve fail %s", err.Error())
+				zap.L().Warn("Sesssion Resolve fail", zap.Error(err))
 			}
 		}
 		//数据持久化
@@ -224,7 +225,7 @@ func (h *handler) Push(span log.TraceSpan, Sessionid string, Settings map[string
 	if h.gate.GetStorageHandler() != nil && agent.(gate.Agent).GetSession().GetUserID() != "" {
 		err := h.gate.GetStorageHandler().Storage(agent.(gate.Agent).GetSession())
 		if err != nil {
-			log.Warning("gate session storage failure : %s", err.Error())
+			zap.L().Warn("gate session storage fail", zap.Error(err))
 		}
 	}
 
@@ -237,7 +238,7 @@ func (h *handler) Push(span log.TraceSpan, Sessionid string, Settings map[string
 func (h *handler) Set(span log.TraceSpan, Sessionid string, key string, value string) (result gate.Session, err string) {
 	agent, ok := h.sessions.Load(Sessionid)
 	if !ok || agent == nil {
-		err = "No Sesssion found"
+		err = "no Sesssion found"
 		return
 	}
 	_ = agent.(gate.Agent).GetSession().SetLocalKV(key, value)
@@ -246,7 +247,7 @@ func (h *handler) Set(span log.TraceSpan, Sessionid string, key string, value st
 	if h.gate.GetStorageHandler() != nil && agent.(gate.Agent).GetSession().GetUserID() != "" {
 		err := h.gate.GetStorageHandler().Storage(agent.(gate.Agent).GetSession())
 		if err != nil {
-			log.Error("gate session storage failure : %s", err.Error())
+			log.Error("Gate session storage fail", zap.Error(err))
 		}
 	}
 
@@ -268,7 +269,7 @@ func (h *handler) Remove(span log.TraceSpan, Sessionid string, key string) (resu
 	if h.gate.GetStorageHandler() != nil && agent.(gate.Agent).GetSession().GetUserID() != "" {
 		err := h.gate.GetStorageHandler().Storage(agent.(gate.Agent).GetSession())
 		if err != nil {
-			log.Error("gate session storage failure :%s", err.Error())
+			log.Error("Gate session storage fail", zap.Error(err))
 		}
 	}
 
@@ -306,7 +307,7 @@ func (h *handler) SendBatch(span log.TraceSpan, SessionidStr string, topic strin
 		}
 		e := agent.(gate.Agent).WriteMsg(topic, body)
 		if e != nil {
-			log.Warning("WriteMsg error: %v", e.Error())
+			zap.L().Warn("WriteMsg fail", zap.Error(e))
 		} else {
 			count++
 		}
@@ -318,7 +319,7 @@ func (h *handler) BroadCast(span log.TraceSpan, topic string, body []byte) (int6
 	h.sessions.Range(func(key, agent interface{}) bool {
 		e := agent.(gate.Agent).WriteMsg(topic, body)
 		if e != nil {
-			log.Warning("WriteMsg error:", e.Error())
+			zap.L().Warn("WriteMsg fail", zap.Error(e))
 		} else {
 			count++
 		}

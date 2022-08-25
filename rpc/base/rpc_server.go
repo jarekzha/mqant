@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,6 +26,7 @@ import (
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	rpcpb "github.com/jarekzha/mqant/rpc/pb"
 	argsutil "github.com/jarekzha/mqant/rpc/util"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -52,7 +53,7 @@ func NewRPCServer(app module.App, module module.Module) (mqrpc.RPCServer, error)
 
 	nats_server, err := NewNatsServer(app, rpc_server)
 	if err != nil {
-		log.Error("AMQPServer Dial: %s", err)
+		log.Error("AMQPServer dial fail", zap.Error(err))
 	}
 	rpc_server.nats_server = nats_server
 
@@ -72,7 +73,8 @@ func (s *RPCServer) SetGoroutineControl(control mqrpc.GoroutineControl) {
 	s.control = control
 }
 
-/**
+/*
+*
 获取当前正在执行的goroutine 数量
 */
 func (s *RPCServer) GetExecuting() int64 {
@@ -160,7 +162,7 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 		//需要回复的才回复
 		err := callInfo.Agent.(mqrpc.MQServer).Callback(callInfo)
 		if err != nil {
-			log.Warning("rpc callback erro :\n%s", err.Error())
+			zap.L().Warn("rpc callback err", zap.Error(err))
 		}
 
 		//if callInfo.RPCInfo.Expired < (time.Now().UnixNano() / 1000000) {
@@ -175,7 +177,7 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 	} else {
 		//对于不需要回复的消息,可以判断一下是否出现错误，打印一些警告
 		if callInfo.Result.Error != "" {
-			log.Warning("rpc callback erro :\n%s", callInfo.Result.Error)
+			zap.L().Warn("rpc callback err", zap.String("err", callInfo.Result.Error))
 		}
 	}
 	if s.app.Options().ServerRPCHandler != nil {
@@ -303,7 +305,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 						elemp := reflect.New(rv)
 						err := json.Unmarshal(v2, elemp.Interface())
 						if err != nil {
-							log.Error("%v []uint8--> %v error with='%v'", callInfo.RPCInfo.Fn, rv, err)
+							zap.S().Errorf("%v []uint8--> %v error with='%v'", callInfo.RPCInfo.Fn, rv, err)
 							in[k] = reflect.ValueOf(ty)
 						} else {
 							in[k] = elemp.Elem()
@@ -368,14 +370,17 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	callInfo.ExecTime = time.Since(start).Nanoseconds()
 	s.doCallback(callInfo)
 	if s.app.GetSettings().RPC.Log {
-		log.TInfo(nil, "rpc Exec ModuleType = %v Func = %v Elapsed = %v", s.module.GetType(), callInfo.RPCInfo.Fn, time.Since(start))
+		zap.L().Info("RPC Exec ModuleType = %v Func = %v Elapsed = %v",
+			zap.String("moduleType", s.module.GetType()),
+			zap.String("func", callInfo.RPCInfo.Fn),
+			zap.Duration("elapsed", time.Since(start)))
 	}
 	if s.listener != nil {
 		s.listener.OnComplete(callInfo.RPCInfo.Fn, callInfo, resultInfo, time.Since(start).Nanoseconds())
 	}
 }
 
-//---------------------------------if _func is not a function or para num and type not match,it will cause panic
+// ---------------------------------if _func is not a function or para num and type not match,it will cause panic
 func (s *RPCServer) runFunc(callInfo *mqrpc.CallInfo) {
 	start := time.Now()
 	defer func() {
@@ -388,7 +393,7 @@ func (s *RPCServer) runFunc(callInfo *mqrpc.CallInfo) {
 			case error:
 				rn = r.(error).Error()
 			}
-			log.Error("recover", rn)
+			zap.S().Errorf("recover", rn)
 			s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, rn)
 		}
 	}()

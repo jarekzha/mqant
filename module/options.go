@@ -38,8 +38,6 @@ type Options struct {
 	// 自定义日志文件名字
 	// 主要作用方便k8s映射日志不会被冲突，建议使用k8s pod实现
 	LogFileName FileNameHandler
-	// 自定义BI日志名字
-	BIFileName FileNameHandler
 }
 
 type FileNameHandler func(logdir, prefix, processID, suffix string) string
@@ -192,12 +190,5 @@ func RPCMaxCoroutine(t int) Option {
 func WithLogFile(name FileNameHandler) Option {
 	return func(o *Options) {
 		o.LogFileName = name
-	}
-}
-
-// WithBIFile Bi日志名称
-func WithBIFile(name FileNameHandler) Option {
-	return func(o *Options) {
-		o.BIFileName = name
 	}
 }

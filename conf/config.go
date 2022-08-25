@@ -47,8 +47,6 @@ func LoadConfig(Path string) {
 // Config 配置结构体
 type Config struct {
 	Log      map[string]interface{}
-	BI       map[string]interface{}
-	OP       map[string]interface{}
 	RPC      RPC `json:"rpc"`
 	Module   map[string][]*ModuleSettings
 	Mqtt     Mqtt

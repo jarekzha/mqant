@@ -40,6 +40,7 @@ import (
 	"github.com/jarekzha/mqant/selector/cache"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 type resultInfo struct {
@@ -72,9 +73,6 @@ func newOptions(opts ...module.Option) module.Options {
 		LogFileName: func(logdir, prefix, processID, suffix string) string {
 			return fmt.Sprintf("%s/%v%s%s", logdir, prefix, processID, suffix)
 		},
-		BIFileName: func(logdir, prefix, processID, suffix string) string {
-			return fmt.Sprintf("%s/%v%s%s", logdir, prefix, processID, suffix)
-		},
 	}
 
 	for _, o := range opts {
@@ -93,8 +91,7 @@ func newOptions(opts ...module.Option) module.Options {
 	if opt.Nats == nil {
 		nc, err := nats.Connect(nats.DefaultURL)
 		if err != nil {
-			log.Error("nats agent: %s", err.Error())
-			//panic(fmt.Sprintf("nats agent: %s", err.Error()))
+			zap.L().DPanic("Nats connect fail", zap.Error(err))
 		}
 		opt.Nats = nc
 	}
@@ -212,7 +209,7 @@ func (app *DefaultApp) Run(mods ...module.Module) error {
 	f, err := os.Open(app.opts.ConfPath)
 	if err != nil {
 		//文件不存在
-		panic(fmt.Sprintf("config path error %v", err))
+		panic(fmt.Sprintf("Config path error %v", err))
 	}
 	var cof conf.Config
 	fmt.Println("Server configuration path :", app.opts.ConfPath)
@@ -224,17 +221,12 @@ func (app *DefaultApp) Run(mods ...module.Module) error {
 		app.configurationLoaded(app)
 	}
 
-	// log.InitLog(app.opts.Debug, app.opts.ProcessID, app.opts.LogDir, cof.Log)
-	// log.InitBI(app.opts.Debug, app.opts.ProcessID, app.opts.BIDir, cof.BI)
 	log.Init(log.WithDebug(app.opts.Debug),
 		log.WithProcessID(app.opts.ProcessID),
-		log.WithBiDir(app.opts.BIDir),
 		log.WithLogDir(app.opts.LogDir),
 		log.WithLogFileName(app.opts.LogFileName),
-		log.WithBiSetting(cof.BI),
-		log.WithBIFileName(app.opts.BIFileName),
 		log.WithLogSetting(cof.Log))
-	log.Info("mqant %v starting up", app.opts.Version)
+	zap.L().Info("Framework mqant starting up", zap.String("version", app.opts.Version))
 
 	manager := basemodule.NewModuleManager()
 	manager.RegisterRunMod(modules.TimerModule()) //注册时间轮模块 每一个进程都默认运行
@@ -248,13 +240,12 @@ func (app *DefaultApp) Run(mods ...module.Module) error {
 	if app.startup != nil {
 		app.startup(app)
 	}
-	log.Info("mqant %v started", app.opts.Version)
+	zap.L().Info("Framework mqant started", zap.String("version", app.opts.Version))
 	// close
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
 	sig := <-c
-	log.BiBeego().Flush()
-	log.LogBeego().Flush()
+	zap.L().Sync()
 	//如果一分钟都关不了则强制关闭
 	timeout := time.NewTimer(app.opts.KillWaitTTL)
 	wait := make(chan struct{})
@@ -265,12 +256,11 @@ func (app *DefaultApp) Run(mods ...module.Module) error {
 	}()
 	select {
 	case <-timeout.C:
-		panic(fmt.Sprintf("mqant close timeout (signal: %v)", sig))
+		zap.L().DPanic("mqant close timeout", zap.Any("singal", sig))
 	case <-wait:
-		log.Info("mqant closing down (signal: %v)", sig)
+		zap.L().Info("mqant closing down signal: %v", zap.Any("signal", sig))
 	}
-	log.BiBeego().Close()
-	log.LogBeego().Close()
+	zap.L().Sync()
 	return nil
 }
 
@@ -319,10 +309,10 @@ func (app *DefaultApp) GetRPCSerialize() map[string]module.RPCSerialize {
 // Watcher Watcher
 func (app *DefaultApp) Watcher(node *registry.Node) {
 	//把注销的服务ServerSession删除掉
-	session, ok := app.serverList.Load(node.Id)
+	session, ok := app.serverList.Load(node.ID)
 	if ok && session != nil {
 		session.(module.ServerSession).GetRPC().Done()
-		app.serverList.Delete(node.Id)
+		app.serverList.Delete(node.ID)
 	}
 }
 
@@ -357,7 +347,7 @@ func (app *DefaultApp) GetServerByID(serverID string) (module.ServerSession, err
 		}
 		sessions := app.GetServersByType(serviceName)
 		for _, s := range sessions {
-			if s.GetNode().Id == serverID {
+			if s.GetNode().ID == serverID {
 				return s, nil
 			}
 		}
@@ -377,13 +367,13 @@ func (app *DefaultApp) GetServerBySelector(serviceName string, opts ...selector.
 	if err != nil {
 		return nil, err
 	}
-	session, ok := app.serverList.Load(node.Id)
+	session, ok := app.serverList.Load(node.ID)
 	if !ok {
 		s, err := basemodule.NewServerSession(app, serviceName, node)
 		if err != nil {
 			return nil, err
 		}
-		app.serverList.Store(node.Id, s)
+		app.serverList.Store(node.ID, s)
 		return s, nil
 	}
 	session.(module.ServerSession).SetNode(node)
@@ -396,19 +386,19 @@ func (app *DefaultApp) GetServersByType(serviceName string) []module.ServerSessi
 	sessions := make([]module.ServerSession, 0)
 	services, err := app.opts.Selector.GetService(serviceName)
 	if err != nil {
-		log.Warning("GetServersByType %v", err)
+		zap.L().Warn("GetServersByType fail", zap.Error(err))
 		return sessions
 	}
 	for _, service := range services {
 		//log.TInfo(nil,"GetServersByType3 %v %v",Type,service.Nodes)
 		for _, node := range service.Nodes {
-			session, ok := app.serverList.Load(node.Id)
+			session, ok := app.serverList.Load(node.ID)
 			if !ok {
 				s, err := basemodule.NewServerSession(app, serviceName, node)
 				if err != nil {
-					log.Warning("NewServerSession %v", err)
+					zap.L().Warn("NewServerSession fail", zap.Error(err))
 				} else {
-					app.serverList.Store(node.Id, s)
+					app.serverList.Store(node.ID, s)
 					sessions = append(sessions, s)
 				}
 			} else {

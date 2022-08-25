@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,12 +19,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	rpcpb "github.com/jarekzha/mqant/rpc/pb"
 	mqanttools "github.com/jarekzha/mqant/utils"
 	"github.com/nats-io/nats.go"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -85,7 +85,8 @@ func (c *NatsClient) Done() (err error) {
 	return
 }
 
-/**
+/*
+*
 消息请求
 */
 func (c *NatsClient) Call(callInfo *mqrpc.CallInfo, callback chan *rpcpb.ResultInfo) error {
@@ -109,7 +110,8 @@ func (c *NatsClient) Call(callInfo *mqrpc.CallInfo, callback chan *rpcpb.ResultI
 	return c.app.Transport().Publish(c.session.GetNode().Address, body)
 }
 
-/**
+/*
+*
 消息请求 不需要回复
 */
 func (c *NatsClient) CallNR(callInfo *mqrpc.CallInfo) error {
@@ -120,7 +122,8 @@ func (c *NatsClient) CallNR(callInfo *mqrpc.CallInfo) error {
 	return c.app.Transport().Publish(c.session.GetNode().Address, body)
 }
 
-/**
+/*
+*
 接收应答信息
 */
 func (c *NatsClient) on_request_handle() (err error) {
@@ -137,7 +140,7 @@ func (c *NatsClient) on_request_handle() (err error) {
 			buf := make([]byte, 1024)
 			l := runtime.Stack(buf, false)
 			errstr := string(buf[:l])
-			log.Error("%s\n ----Stack----\n%s", rn, errstr)
+			zap.S().Errorf("%s\n ----Stack----\n%s", rn, errstr)
 			fmt.Println(errstr)
 		}
 	}()
@@ -160,19 +163,19 @@ func (c *NatsClient) on_request_handle() (err error) {
 				//订阅已关闭，需要重新订阅
 				c.subs, err = c.app.Transport().SubscribeSync(c.callbackqueueName)
 				if err != nil {
-					log.Error("NatsClient SubscribeSync[1] error with '%v'", err)
+					zap.L().Error("NatsClient SubscribeSync[1] error", zap.Error(err))
 					continue
 				}
 			}
 			continue
 		} else if err != nil {
 			fmt.Println(fmt.Sprintf("%v rpcclient error: %v", time.Now().String(), err.Error()))
-			log.Error("NatsClient error with '%v'", err)
+			zap.S().Errorf("NatsClient error with '%v'", err)
 			if !c.subs.IsValid() {
 				//订阅已关闭，需要重新订阅
 				c.subs, err = c.app.Transport().SubscribeSync(c.callbackqueueName)
 				if err != nil {
-					log.Error("NatsClient SubscribeSync[2] error with '%v'", err)
+					zap.L().Error("NatsClient SubscribeSync[2] fail", zap.Error(err))
 					continue
 				}
 			}
@@ -181,7 +184,7 @@ func (c *NatsClient) on_request_handle() (err error) {
 
 		resultInfo, err := c.UnmarshalResult(m.Data)
 		if err != nil {
-			log.Error("Unmarshal faild", err)
+			zap.L().Error("Unmarshal fail", zap.Error(err))
 		} else {
 			correlation_id := resultInfo.Cid
 			clinetCallInfo := c.callinfos.Get(correlation_id)
@@ -194,7 +197,7 @@ func (c *NatsClient) on_request_handle() (err error) {
 				}
 			} else {
 				//可能客户端已超时了，但服务端处理完还给回调了
-				log.Warning("rpc callback no found : [%s]", correlation_id)
+				zap.S().Warnf("rpc callback no found : [%s]", correlation_id)
 			}
 		}
 	}

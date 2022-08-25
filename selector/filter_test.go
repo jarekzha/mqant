@@ -100,7 +100,7 @@ func TestFilterLabel(t *testing.T) {
 					Version: "1.0.0",
 					Nodes: []*registry.Node{
 						&registry.Node{
-							Id:      "test-1",
+							ID:      "test-1",
 							Address: "localhost",
 							Metadata: map[string]string{
 								"foo": "bar",
@@ -113,7 +113,7 @@ func TestFilterLabel(t *testing.T) {
 					Version: "1.1.0",
 					Nodes: []*registry.Node{
 						&registry.Node{
-							Id:      "test-2",
+							ID:      "test-2",
 							Address: "localhost",
 							Metadata: map[string]string{
 								"foo": "baz",
@@ -132,7 +132,7 @@ func TestFilterLabel(t *testing.T) {
 					Version: "1.0.0",
 					Nodes: []*registry.Node{
 						&registry.Node{
-							Id:      "test-1",
+							ID:      "test-1",
 							Address: "localhost",
 						},
 					},
@@ -142,7 +142,7 @@ func TestFilterLabel(t *testing.T) {
 					Version: "1.1.0",
 					Nodes: []*registry.Node{
 						&registry.Node{
-							Id:      "test-2",
+							ID:      "test-2",
 							Address: "localhost",
 						},
 					},

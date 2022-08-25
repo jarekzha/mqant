@@ -141,7 +141,7 @@ func (c *consulRegistry) Deregister(s *Service) error {
 	c.Unlock()
 
 	node := s.Nodes[0]
-	return c.Client.Agent().ServiceDeregister(node.Id)
+	return c.Client.Agent().ServiceDeregister(node.ID)
 }
 
 func (c *consulRegistry) Register(s *Service, opts ...RegisterOption) error {
@@ -182,7 +182,7 @@ func (c *consulRegistry) Register(s *Service, opts ...RegisterOption) error {
 	if ok && v == h {
 		// if the err is nil we're all good, bail out
 		// if not, we don't know what the state is, so full re-register
-		if err := c.Client.Agent().PassTTL("service:"+node.Id, ""); err == nil {
+		if err := c.Client.Agent().PassTTL("service:"+node.ID, ""); err == nil {
 			return nil
 		}
 	}
@@ -215,7 +215,7 @@ func (c *consulRegistry) Register(s *Service, opts ...RegisterOption) error {
 
 	// register the service
 	asr := &consul.AgentServiceRegistration{
-		ID:      node.Id,
+		ID:      node.ID,
 		Name:    s.Name,
 		Tags:    tags,
 		Port:    node.Port,
@@ -245,7 +245,7 @@ func (c *consulRegistry) Register(s *Service, opts ...RegisterOption) error {
 	}
 
 	// pass the healthcheck
-	return c.Client.Agent().PassTTL("service:"+node.Id, "")
+	return c.Client.Agent().PassTTL("service:"+node.ID, "")
 }
 
 func (c *consulRegistry) GetService(name string) ([]*Service, error) {
@@ -310,7 +310,7 @@ func (c *consulRegistry) GetService(name string) ([]*Service, error) {
 		}
 
 		svc.Nodes = append(svc.Nodes, &Node{
-			Id:       id,
+			ID:       id,
 			Address:  address,
 			Port:     s.Service.Port,
 			Metadata: decodeMetadata(s.Service.Tags),

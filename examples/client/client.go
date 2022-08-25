@@ -6,9 +6,9 @@ import (
 	"github.com/jarekzha/mqant"
 	"github.com/jarekzha/mqant/conf"
 	"github.com/jarekzha/mqant/examples/proto/examples/greeter"
-	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	basemodule "github.com/jarekzha/mqant/module/base"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -25,9 +25,9 @@ func main() {
 	// 调用hello方法
 	rsp, err := greeter.NewGreeterClient(app, "greeter").Hello(&greeter.Request{})
 	if err != nil {
-		log.Info("xxxx %s", err)
+		zap.L().Info("xxxx", zap.Error(err))
 	}
-	log.Info("xxxx %s", rsp.Msg)
+	zap.L().Info("xxxx", zap.String("msg", rsp.Msg))
 	s := &Server{}
 	app.Run(s)
 }

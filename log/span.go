@@ -54,3 +54,10 @@ func (t *TraceSpanImp) ExtractSpan() TraceSpan {
 		Span:  mqanttools.GenerateID().String(),
 	}
 }
+
+func CreateTrace(trace, span string) TraceSpan {
+	return &TraceSpanImp{
+		Trace: trace,
+		Span:  span,
+	}
+}

@@ -22,29 +22,30 @@ import (
 	"io"
 
 	"github.com/jarekzha/mqant/log"
+	"go.uber.org/zap"
 )
 
 const (
 	Rserved = iota
-	CONNECT  //1
-	CONNACK  //2
+	CONNECT //1
+	CONNACK //2
 
-	PUBLISH  //3
-	PUBACK   //4
-	PUBREC   //5
-	PUBREL   //6
-	PUBCOMP  //7
+	PUBLISH //3
+	PUBACK  //4
+	PUBREC  //5
+	PUBREL  //6
+	PUBCOMP //7
 
-	SUBSCRIBE  //8
-	SUBACK     //9
+	SUBSCRIBE //8
+	SUBACK    //9
 
-	UNSUBSCRIBE  //10
-	UNSUBACK     //11
+	UNSUBSCRIBE //10
+	UNSUBACK    //11
 
-	PINGREQ   //12
-	PINGRESP  //13
+	PINGREQ  //12
+	PINGRESP //13
 
-	DISCONNECT  //14
+	DISCONNECT //14
 )
 
 var null_string = ""
@@ -602,7 +603,7 @@ func ReadPack(r *bufio.Reader, max_pack_length int) (pack *Pack, err error) {
 	// Pass, nothing to do.
 	default:
 		//将pack剩余中的数据读了
-		log.Error("No Find Pack(%v) length(%v)", pack.msg_type, pack.length)
+		log.Error("No find pack", zap.Int("type", int(pack.msg_type)), zap.Int("lengh", pack.length))
 		if pack.length > 0 {
 			buf := make([]byte, pack.length)
 			_, err = io.ReadFull(r, buf)

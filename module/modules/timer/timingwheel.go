@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/jarekzha/mqant/log"
+	"go.uber.org/zap"
 )
 
 var timeWheel *TimeWheel
@@ -113,7 +113,7 @@ func (tw *TimeWheel) AddTimer(delay time.Duration, data TaskData, job Job) {
 	tw.addTaskChannel <- Task{delay: delay, data: data, job: job}
 }
 
-//可以通过key来撤销一个未执行的定时器
+// 可以通过key来撤销一个未执行的定时器
 func (tw *TimeWheel) AddTimerCustom(delay time.Duration, key interface{}, data TaskData, job Job) {
 	if delay <= 0 {
 		return
@@ -159,13 +159,12 @@ func (tw *TimeWheel) scanAndRunTask(l *list.List) {
 				if r := recover(); r != nil {
 					var rn = ""
 					switch r.(type) {
-
 					case string:
 						rn = r.(string)
 					case error:
 						rn = r.(error).Error()
 					}
-					log.Error("TimeWheel Job Recover %v", rn)
+					zap.S().Errorf("TimeWheel Job Recover %v", rn)
 				}
 			}()
 			task.job(task.data)

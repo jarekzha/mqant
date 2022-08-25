@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/server"
+	"go.uber.org/zap"
 )
 
 // NewService NewService
@@ -39,7 +39,7 @@ func (s *service) run(exit chan bool) {
 		case <-t.C:
 			err := s.opts.Server.ServiceRegister()
 			if err != nil {
-				log.Warning("service run Server.Register error: ", err)
+				zap.L().Warn("Service run Server.Register fail", zap.Error(err))
 			}
 		case <-exit:
 			t.Stop()

@@ -8,7 +8,7 @@ func addNodes(old, neu []*registry.Node) []*registry.Node {
 	for _, n := range neu {
 		var seen bool
 		for i, o := range old {
-			if o.Id == n.Id {
+			if o.ID == n.ID {
 				seen = true
 				old[i] = n
 				break
@@ -44,7 +44,7 @@ func delNodes(old, del []*registry.Node) []*registry.Node {
 	for _, o := range old {
 		var rem bool
 		for _, n := range del {
-			if o.Id == n.Id {
+			if o.ID == n.ID {
 				rem = true
 				break
 			}

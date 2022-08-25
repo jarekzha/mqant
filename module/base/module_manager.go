@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	"github.com/jarekzha/mqant/conf"
-	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
+	"go.uber.org/zap"
 )
 
 // NewModuleManager 新建模块管理器
@@ -56,7 +56,7 @@ func (mer *ModuleManager) RegisterRunMod(mi module.Module) {
 
 // Init 初始化
 func (mer *ModuleManager) Init(app module.App, ProcessID string) {
-	log.Info("This service ModuleGroup(ProcessID) is [%s]", ProcessID)
+	zap.S().Infof("This service ModuleGroup(ProcessID) is [%s]", ProcessID)
 	mer.app = app
 	mer.CheckModuleSettings() //配置文件规则检查
 	for i := 0; i < len(mer.mods); i++ {

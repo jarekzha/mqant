@@ -21,7 +21,7 @@ func TestDefaultSelector(t *testing.T) {
 		if err != nil {
 			t.Errorf("Expected node err, got err: %v", err)
 		}
-		counts[node.Id]++
+		counts[node.ID]++
 	}
 
 	t.Logf("Default Counts %v", counts)

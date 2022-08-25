@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,11 +27,11 @@ import (
 	"github.com/jarekzha/mqant/conf"
 	"github.com/jarekzha/mqant/gate"
 	"github.com/jarekzha/mqant/gate/base/mqtt"
-	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	"github.com/jarekzha/mqant/network"
 	argsutil "github.com/jarekzha/mqant/rpc/util"
 	mqanttools "github.com/jarekzha/mqant/utils"
+	"go.uber.org/zap"
 )
 
 //type resultInfo struct {
@@ -113,7 +113,7 @@ func (age *agent) Run() (err error) {
 		if err := recover(); err != nil {
 			buff := make([]byte, 1024)
 			runtime.Stack(buff, false)
-			log.Error("conn.serve() panic(%v)\n info:%s", err, string(buff))
+			zap.L().Error("conn.serve() panic", zap.Any("err", err), zap.ByteString("info", buff))
 		}
 		age.Close()
 
@@ -123,7 +123,7 @@ func (age *agent) Run() (err error) {
 			if err := recover(); err != nil {
 				buff := make([]byte, 1024)
 				runtime.Stack(buff, false)
-				log.Error("OverTime panic(%v)\n info:%s", err, string(buff))
+				zap.L().Error("OverTime panic", zap.Any("err", err), zap.ByteString("info", buff))
 			}
 		}()
 		select {
@@ -140,21 +140,21 @@ func (age *agent) Run() (err error) {
 	var pack *mqtt.Pack
 	pack, err = mqtt.ReadPack(age.r, age.gate.Options().MaxPackSize)
 	if err != nil {
-		log.Error("Read login pack error %v", err)
+		zap.L().Error("Read login pack fail", zap.Error(err))
 		return
 	}
 	if pack.GetType() != mqtt.CONNECT {
-		log.Error("Recive login pack's type error:%v \n", pack.GetType())
+		zap.L().Error("Recive login pack's type wrong", zap.Int("type", int(pack.GetType())))
 		return
 	}
 	conn, ok := (pack.GetVariable()).(*mqtt.Connect)
 	if !ok {
-		log.Error("It's not age mqtt connection package.")
+		zap.L().Error("It's not age mqtt connection package")
 		return
 	}
 	//id := info.GetUserName()
 	//psw := info.GetPassword()
-	//log.Debug("Read login pack %s %s %s %s",*id,*psw,info.GetProtocol(),info.GetVersion())
+	//zap.L().Debug("Read login pack %s %s %s %s",*id,*psw,info.GetProtocol(),info.GetVersion())
 	c := mqtt.NewClient(conf.Conf.Mqtt, age, age.r, age.w, age.conn, conn.GetKeepAlive(), age.gate.Options().MaxPackSize)
 	age.client = c
 	addr := age.conn.RemoteAddr()
@@ -166,7 +166,7 @@ func (age *agent) Run() (err error) {
 		"Settings":  make(map[string]string),
 	})
 	if err != nil {
-		log.Error("gate create agent fail", err.Error())
+		zap.L().Error("gate create agent fail", zap.Error(err))
 		return
 	}
 	age.session.JudgeGuest(age.gate.GetJudgeGuest())
@@ -174,7 +174,7 @@ func (age *agent) Run() (err error) {
 	//回复客户端 CONNECT
 	err = mqtt.WritePack(mqtt.GetConnAckPack(0), age.w)
 	if err != nil {
-		log.Error("ConnAckPack error %v", err.Error())
+		zap.L().Error("ConnAckPack error %v", zap.Error(err))
 		return
 	}
 	age.connTime = time.Now()
@@ -189,7 +189,7 @@ func (age *agent) OnClose() error {
 		if err := recover(); err != nil {
 			buff := make([]byte, 1024)
 			runtime.Stack(buff, false)
-			log.Error("agent OnClose panic(%v)\n info:%s", err, string(buff))
+			zap.L().Error("agent OnClose panic", zap.Any("err", err), zap.ByteString("info", buff))
 		}
 	}()
 	age.isclose = true
@@ -213,7 +213,7 @@ func (age *agent) ConnTime() time.Time {
 func (age *agent) OnRecover(pack *mqtt.Pack) {
 	err := age.Wait()
 	if err != nil {
-		log.Error("Gate OnRecover error [%v]", err)
+		zap.L().Error("Gate OnRecover fail", zap.Error(err))
 		pub := pack.GetVariable().(*mqtt.Publish)
 		age.toResult(age, *pub.GetTopic(), nil, err.Error())
 	} else {
@@ -254,7 +254,7 @@ func (age *agent) recoverworker(pack *mqtt.Pack) {
 		if r := recover(); r != nil {
 			buff := make([]byte, 1024)
 			runtime.Stack(buff, false)
-			log.Error("Gate recoverworker error [%v] stack : %v", r, string(buff))
+			zap.L().Error("Gate recoverworker panic", zap.Any("err", r), zap.ByteString("info", buff))
 		}
 	}()
 
@@ -282,7 +282,7 @@ func (age *agent) recoverworker(pack *mqtt.Pack) {
 			var msgid string
 			if len(topics) < 2 {
 				errorstr := "Topic must be [moduleType@moduleID]/[handler]|[moduleType@moduleID]/[handler]/[msgid]"
-				log.Error(errorstr)
+				zap.L().Error(errorstr)
 				toResult(age, *pub.GetTopic(), nil, errorstr)
 				return
 			} else if len(topics) == 3 {
@@ -343,7 +343,7 @@ func (age *agent) recoverworker(pack *mqtt.Pack) {
 
 				e := serverSession.CallNRArgs(topics[1], ArgsType, args)
 				if e != nil {
-					log.Warning("Gate rpc", e.Error())
+					zap.L().Warn("Gate rpc fail", zap.Error(e))
 				}
 			}
 		}

@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/registry"
 	"github.com/jarekzha/mqant/selector"
+	"go.uber.org/zap"
 )
 
 type cacheSelector struct {
@@ -188,7 +188,7 @@ func (c *cacheSelector) update(res *registry.Result) {
 		for _, cur := range service.Nodes {
 			var seen bool
 			for _, node := range res.Service.Nodes {
-				if cur.Id == node.Id {
+				if cur.ID == node.ID {
 					seen = true
 					break
 				}
@@ -210,7 +210,7 @@ func (c *cacheSelector) update(res *registry.Result) {
 		for _, cur := range service.Nodes {
 			var seen bool
 			for _, del := range res.Service.Nodes {
-				if del.Id == cur.Id {
+				if del.ID == cur.ID {
 					seen = true
 					break
 				}
@@ -275,7 +275,7 @@ func (c *cacheSelector) run(name string) {
 			if c.quit() {
 				return
 			}
-			log.Warning("%v", err)
+			zap.L().Warn("Registry watch fail", zap.Error(err))
 			time.Sleep(time.Second)
 			continue
 		}

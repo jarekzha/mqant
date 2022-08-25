@@ -13,7 +13,7 @@ func TestDelServices(t *testing.T) {
 			Version: "1.0.0",
 			Nodes: []*registry.Node{
 				{
-					Id:      "foo-123",
+					ID:      "foo-123",
 					Address: "localhost",
 					Port:    9999,
 				},
@@ -24,7 +24,7 @@ func TestDelServices(t *testing.T) {
 			Version: "1.0.0",
 			Nodes: []*registry.Node{
 				{
-					Id:      "foo-123",
+					ID:      "foo-123",
 					Address: "localhost",
 					Port:    6666,
 				},
@@ -46,12 +46,12 @@ func TestDelNodes(t *testing.T) {
 			Version: "1.0.0",
 			Nodes: []*registry.Node{
 				{
-					Id:      "foo-123",
+					ID:      "foo-123",
 					Address: "localhost",
 					Port:    9999,
 				},
 				{
-					Id:      "foo-321",
+					ID:      "foo-321",
 					Address: "localhost",
 					Port:    6666,
 				},
@@ -62,7 +62,7 @@ func TestDelNodes(t *testing.T) {
 			Version: "1.0.0",
 			Nodes: []*registry.Node{
 				{
-					Id:      "foo-123",
+					ID:      "foo-123",
 					Address: "localhost",
 					Port:    6666,
 				},

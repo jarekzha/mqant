@@ -47,7 +47,7 @@ type serverSession struct {
 }
 
 func (c *serverSession) GetID() string {
-	return c.node.Id
+	return c.node.ID
 }
 
 func (c *serverSession) GetName() string {

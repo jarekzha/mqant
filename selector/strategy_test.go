@@ -13,12 +13,12 @@ func TestStrategies(t *testing.T) {
 			Version: "latest",
 			Nodes: []*registry.Node{
 				&registry.Node{
-					Id:      "test1-1",
+					ID:      "test1-1",
 					Address: "10.0.0.1",
 					Port:    1001,
 				},
 				&registry.Node{
-					Id:      "test1-2",
+					ID:      "test1-2",
 					Address: "10.0.0.2",
 					Port:    1002,
 				},
@@ -29,12 +29,12 @@ func TestStrategies(t *testing.T) {
 			Version: "default",
 			Nodes: []*registry.Node{
 				&registry.Node{
-					Id:      "test1-3",
+					ID:      "test1-3",
 					Address: "10.0.0.3",
 					Port:    1003,
 				},
 				&registry.Node{
-					Id:      "test1-4",
+					ID:      "test1-4",
 					Address: "10.0.0.4",
 					Port:    1004,
 				},
@@ -51,7 +51,7 @@ func TestStrategies(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			counts[node.Id]++
+			counts[node.ID]++
 		}
 
 		t.Logf("%s: %+v\n", name, counts)

@@ -11,7 +11,7 @@ type Service struct {
 
 // Node 服务节点信息
 type Node struct {
-	Id       string            `json:"id"`
+	ID       string            `json:"id"`
 	Address  string            `json:"address"`
 	Port     int               `json:"port"`
 	Metadata map[string]string `json:"metadata"`

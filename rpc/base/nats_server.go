@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,11 +19,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	rpcpb "github.com/jarekzha/mqant/rpc/pb"
 	"github.com/nats-io/nats.go"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -83,7 +83,8 @@ func safeClose(ch chan bool) {
 	close(ch) // panic if ch is closed
 }
 
-/**
+/*
+*
 注销消息队列
 */
 func (s *NatsServer) Shutdown() (err error) {
@@ -105,7 +106,8 @@ func (s *NatsServer) Callback(callinfo *mqrpc.CallInfo) error {
 	return s.app.Transport().Publish(reply_to, body)
 }
 
-/**
+/*
+*
 接收请求信息
 */
 func (s *NatsServer) on_request_handle() (err error) {
@@ -122,7 +124,7 @@ func (s *NatsServer) on_request_handle() (err error) {
 			buf := make([]byte, 1024)
 			l := runtime.Stack(buf, false)
 			errstr := string(buf[:l])
-			log.Error("%s\n ----Stack----\n%s", rn, errstr)
+			zap.S().Errorf("%s\n ----Stack----\n%s", rn, errstr)
 			fmt.Println(errstr)
 		}
 	}()
@@ -148,18 +150,18 @@ func (s *NatsServer) on_request_handle() (err error) {
 				//订阅已关闭，需要重新订阅
 				s.subs, err = s.app.Transport().SubscribeSync(s.addr)
 				if err != nil {
-					log.Error("NatsServer SubscribeSync[1] error with '%v'", err)
+					zap.L().Error("NatsServer SubscribeSync[1] fail", zap.Error(err))
 					continue
 				}
 			}
 			continue
 		} else if err != nil {
-			log.Warning("NatsServer error with '%v'", err)
+			zap.L().Warn("NatsServer read msg fail", zap.Error(err))
 			if !s.subs.IsValid() {
 				//订阅已关闭，需要重新订阅
 				s.subs, err = s.app.Transport().SubscribeSync(s.addr)
 				if err != nil {
-					log.Error("NatsServer SubscribeSync[2] error with '%v'", err)
+					zap.L().Error("NatsServer SubscribeSync[2] fail", zap.Error(err))
 					continue
 				}
 			}
@@ -199,7 +201,6 @@ func (s *NatsServer) Unmarshal(data []byte) (*rpcpb.RPCInfo, error) {
 
 // goroutine safe
 func (s *NatsServer) MarshalResult(resultInfo *rpcpb.ResultInfo) ([]byte, error) {
-	//log.Error("",map2)
 	b, err := proto.Marshal(resultInfo)
 	return b, err
 }

@@ -6,12 +6,12 @@ import (
 	"sync"
 
 	"github.com/jarekzha/mqant/conf"
-	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	"github.com/jarekzha/mqant/registry"
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	defaultrpc "github.com/jarekzha/mqant/rpc/base"
 	"github.com/jarekzha/mqant/utils/lib/addr"
+	"go.uber.org/zap"
 )
 
 type rpcServer struct {
@@ -56,7 +56,7 @@ func (s *rpcServer) Init(opts ...Option) error {
 func (s *rpcServer) OnInit(module module.Module, app module.App, settings *conf.ModuleSettings) error {
 	server, err := defaultrpc.NewRPCServer(app, module) //默认会创建一个本地的RPC
 	if err != nil {
-		log.Warning("Dial: %s", err)
+		zap.L().Warn("NewRPCServer fail", zap.Error(err))
 	}
 	s.server = server
 	s.opts.Address = server.Addr()
@@ -112,12 +112,12 @@ func (s *rpcServer) ServiceRegister() error {
 
 	// register service
 	node := &registry.Node{
-		Id:       config.Name + "@" + config.ID,
+		ID:       config.Name + "@" + config.ID,
 		Address:  addr,
 		Port:     port,
 		Metadata: config.Metadata,
 	}
-	s.id = node.Id
+	s.id = node.ID
 	node.Metadata["server"] = s.String()
 	node.Metadata["registry"] = config.Registry.String()
 
@@ -140,7 +140,7 @@ func (s *rpcServer) ServiceRegister() error {
 	s.Unlock()
 
 	if !registered {
-		log.Info("Registering node: %s", node.Id)
+		zap.S().Infof("Registering node: %s", node.ID)
 	}
 
 	// create registry options
@@ -191,7 +191,7 @@ func (s *rpcServer) ServiceDeregister() error {
 	}
 
 	node := &registry.Node{
-		Id:      config.Name + "@" + config.ID,
+		ID:      config.Name + "@" + config.ID,
 		Address: addr,
 		Port:    port,
 	}
@@ -202,7 +202,7 @@ func (s *rpcServer) ServiceDeregister() error {
 		Nodes:   []*registry.Node{node},
 	}
 
-	log.Info("Deregistering node: %s", node.Id)
+	zap.S().Infof("Unregistering node: %s", node.ID)
 	if err := config.Registry.Deregister(service); err != nil {
 		return err
 	}
@@ -233,12 +233,12 @@ func (s *rpcServer) Start() error {
 
 func (s *rpcServer) Stop() error {
 	if s.server != nil {
-		log.Info("RPCServer closeing id(%s)", s.id)
+		zap.L().Info("RPCServer closeing", zap.String("ID", s.id))
 		err := s.server.Done()
 		if err != nil {
-			log.Warning("RPCServer close fail id(%s) error(%s)", s.id, err)
+			zap.L().Warn("RPCServer close fail", zap.Error(err), zap.String("ID", s.id))
 		} else {
-			log.Info("RPCServer close success id(%s)", s.id)
+			zap.L().Info("RPCServer close success", zap.String("ID", s.id))
 		}
 		s.server = nil
 	}

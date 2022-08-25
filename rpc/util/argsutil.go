@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import (
 	"github.com/jarekzha/mqant/module"
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	mqanttools "github.com/jarekzha/mqant/utils"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -123,7 +124,7 @@ func ArgsTypeAnd2Bytes(app module.App, arg interface{}) (string, []byte, error) 
 			if v2, ok := arg.(proto.Message); ok {
 				b, err := proto.Marshal(v2)
 				if err != nil {
-					log.Error("proto.Marshal error")
+					zap.L().Error("proto.Marshal error", zap.Error(err))
 					return "", nil, fmt.Errorf("args [%s] proto.Marshal error %v", reflect.TypeOf(arg), err)
 				}
 				return fmt.Sprintf("%v@%v", Proto, reflect.TypeOf(arg)), b, nil

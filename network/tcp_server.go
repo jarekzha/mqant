@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jarekzha/mqant/log"
+	"go.uber.org/zap"
 )
 
 // TCPServer tcp服务器
@@ -41,18 +41,18 @@ type TCPServer struct {
 // Start 开始tcp监听
 func (server *TCPServer) Start() {
 	server.init()
-	log.Info("TCP Listen :%s", server.Addr)
+	zap.L().Info("TCP Listen", zap.String("addr", server.Addr))
 	go server.run()
 }
 
 func (server *TCPServer) init() {
 	ln, err := net.Listen("tcp", server.Addr)
 	if err != nil {
-		log.Warning("%v", err)
+		zap.L().Warn("Tcp listen fail", zap.Error(err))
 	}
 
 	if server.NewAgent == nil {
-		log.Warning("NewAgent must not be nil")
+		zap.L().Warn("NewAgent must not be nil")
 	}
 	if server.TLS {
 		tlsConf := new(tls.Config)
@@ -60,9 +60,9 @@ func (server *TCPServer) init() {
 		tlsConf.Certificates[0], err = tls.LoadX509KeyPair(server.CertFile, server.KeyFile)
 		if err == nil {
 			ln = tls.NewListener(ln, tlsConf)
-			log.Info("TCP Listen TLS load success")
+			zap.L().Info("TCP Listen tls load success")
 		} else {
-			log.Warning("tcp_server tls :%v", err)
+			zap.L().Warn("Load Tcp tls fail", zap.Error(err))
 		}
 	}
 
@@ -85,7 +85,7 @@ func (server *TCPServer) run() {
 				if max := 1 * time.Second; tempDelay > max {
 					tempDelay = max
 				}
-				log.Info("accept error: %v; retrying in %v", err, tempDelay)
+				zap.L().Warn("Accept fail, retrying", zap.Error(err), zap.Duration("delay", tempDelay))
 				time.Sleep(tempDelay)
 				continue
 			}

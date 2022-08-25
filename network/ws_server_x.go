@@ -11,6 +11,7 @@ import (
 
 	"github.com/jarekzha/mqant/log"
 	iptool "github.com/jarekzha/mqant/utils/ip"
+	"go.uber.org/zap"
 	"golang.org/x/net/websocket"
 )
 
@@ -77,15 +78,15 @@ func (handler *WSHandler) echo(conn *websocket.Conn) {
 func (server *WSServer) Start() {
 	ln, err := net.Listen("tcp", server.Addr)
 	if err != nil {
-		log.Warning("%v", err)
+		zap.L().Warn("Tcp listen fail", zap.Error(err))
 	}
 
 	if server.HTTPTimeout <= 0 {
 		server.HTTPTimeout = 10 * time.Second
-		log.Warning("invalid HTTPTimeout, reset to %v", server.HTTPTimeout)
+		zap.L().Warn("invalid HTTPTimeout, reset to defaul", zap.Duration("defaul", server.HTTPTimeout))
 	}
 	if server.NewAgent == nil {
-		log.Warning("NewAgent must not be nil")
+		zap.L().Warn("NewAgent must not be nil")
 	}
 	if server.TLS {
 		tlsConf := new(tls.Config)
@@ -93,9 +94,9 @@ func (server *WSServer) Start() {
 		tlsConf.Certificates[0], err = tls.LoadX509KeyPair(server.CertFile, server.KeyFile)
 		if err == nil {
 			ln = tls.NewListener(ln, tlsConf)
-			log.Info("WS Listen TLS load success")
+			zap.L().Info("WS Listen TLS load success")
 		} else {
-			log.Warning("ws_server tls :%v", err)
+			zap.L().Warn("Load ws_server tls fail", zap.Error(err))
 		}
 	}
 	server.ln = ln
@@ -132,7 +133,7 @@ func (server *WSServer) Start() {
 		WriteTimeout:   server.HTTPTimeout,
 		MaxHeaderBytes: 1024,
 	}
-	log.Info("WS Listen :%s", server.Addr)
+	log.Info("WS Listen", zap.String("addr", server.Addr))
 	go httpServer.Serve(ln)
 }
 
