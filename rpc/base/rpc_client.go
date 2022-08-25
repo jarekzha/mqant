@@ -179,7 +179,7 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...interface{
 			zap.String("func", _func),
 			zap.Duration("elapsed", time.Since(start)),
 			zap.Any("result", r),
-			zap.String("err", errstr))
+			zap.String("error", errstr))
 	}
 	return r, errstr
 }
