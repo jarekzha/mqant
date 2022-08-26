@@ -22,7 +22,6 @@ type Options struct {
 	WorkDir     string
 	ConfPath    string
 	LogDir      string
-	BIDir       string
 	ProcessID   string
 	KillWaitTTL time.Duration
 	Registry    registry.Registry
@@ -90,13 +89,6 @@ func LogDir(v string) Option {
 func ProcessID(v string) Option {
 	return func(o *Options) {
 		o.ProcessID = v
-	}
-}
-
-// BILogDir  BI日志路径
-func BILogDir(v string) Option {
-	return func(o *Options) {
-		o.BIDir = v
 	}
 }
 
@@ -172,14 +164,14 @@ func Parse(t bool) Option {
 	}
 }
 
-//RPC超时时间
+// RPC超时时间
 func RPCExpired(t time.Duration) Option {
 	return func(o *Options) {
 		o.RPCExpired = t
 	}
 }
 
-//单个节点RPC同时并发协程数
+// 单个节点RPC同时并发协程数
 func RPCMaxCoroutine(t int) Option {
 	return func(o *Options) {
 		o.RPCMaxCoroutine = t

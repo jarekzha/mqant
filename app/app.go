@@ -58,8 +58,6 @@ func (p *protocolMarshalImp) GetData() []byte {
 }
 
 func newOptions(opts ...module.Option) module.Options {
-	var wdPath, confPath, Logdir, BIdir *string
-	var ProcessID *string
 	opt := module.Options{
 		Registry:         registry.DefaultRegistry,
 		Selector:         cache.NewSelector(),
@@ -80,12 +78,7 @@ func newOptions(opts ...module.Option) module.Options {
 	}
 
 	if opt.Parse {
-		wdPath = flag.String("wd", "", "Server work directory")
-		confPath = flag.String("conf", "", "Server configuration file path")
-		ProcessID = flag.String("pid", "development", "Server ProcessID?")
-		Logdir = flag.String("log", "", "Log file directory?")
-		BIdir = flag.String("bi", "", "bi file directory?")
-		flag.Parse() //解析输入的参数
+		parseFlag(&opt)
 	}
 
 	if opt.Nats == nil {
@@ -96,60 +89,33 @@ func newOptions(opts ...module.Option) module.Options {
 		opt.Nats = nc
 	}
 
-	if opt.WorkDir == "" {
-		opt.WorkDir = *wdPath
-	}
 	if opt.ProcessID == "" {
-		opt.ProcessID = *ProcessID
-		if opt.ProcessID == "" {
-			opt.ProcessID = "development"
-		}
+		opt.ProcessID = "development"
 	}
-	ApplicationDir := ""
+	appDir := ""
 	if opt.WorkDir != "" {
 		_, err := os.Open(opt.WorkDir)
 		if err != nil {
 			panic(err)
 		}
 		os.Chdir(opt.WorkDir)
-		ApplicationDir, err = os.Getwd()
+		appDir, err = os.Getwd()
 	} else {
 		var err error
-		ApplicationDir, err = os.Getwd()
+		appDir, err = os.Getwd()
 		if err != nil {
 			file, _ := exec.LookPath(os.Args[0])
-			ApplicationPath, _ := filepath.Abs(file)
-			ApplicationDir, _ = filepath.Split(ApplicationPath)
+			appPath, _ := filepath.Abs(file)
+			appDir, _ = filepath.Split(appPath)
 		}
-
 	}
-	opt.WorkDir = ApplicationDir
-	defaultConfPath := fmt.Sprintf("%s/bin/conf/server.json", ApplicationDir)
-	defaultLogPath := fmt.Sprintf("%s/bin/logs", ApplicationDir)
-	defaultBIPath := fmt.Sprintf("%s/bin/bi", ApplicationDir)
+	opt.WorkDir = appDir
 
 	if opt.ConfPath == "" {
-		if *confPath == "" {
-			opt.ConfPath = defaultConfPath
-		} else {
-			opt.ConfPath = *confPath
-		}
+		opt.ConfPath = fmt.Sprintf("%s/bin/conf/server.json", appDir)
 	}
-
 	if opt.LogDir == "" {
-		if *Logdir == "" {
-			opt.LogDir = defaultLogPath
-		} else {
-			opt.LogDir = *Logdir
-		}
-	}
-
-	if opt.BIDir == "" {
-		if *BIdir == "" {
-			opt.BIDir = defaultBIPath
-		} else {
-			opt.BIDir = *BIdir
-		}
+		opt.LogDir = fmt.Sprintf("%s/bin/logs", appDir)
 	}
 
 	_, err := os.Open(opt.ConfPath)
@@ -166,15 +132,29 @@ func newOptions(opts ...module.Option) module.Options {
 		}
 	}
 
-	_, err = os.Open(opt.BIDir)
-	if err != nil {
-		//文件不存在
-		err := os.Mkdir(opt.BIDir, os.ModePerm) //
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
 	return opt
+}
+
+// 解析命令行参数
+func parseFlag(opt *module.Options) {
+	workDir := flag.String("wd", "", "Server work directory")
+	confPath := flag.String("conf", "", "Server configuration file path")
+	processID := flag.String("pid", "development", "Server ProcessID?")
+	logDir := flag.String("log", "", "Log file directory?")
+	flag.Parse() // 解析输入的参数
+
+	if *workDir != "" {
+		opt.WorkDir = *workDir
+	}
+	if *confPath != "" {
+		opt.ConfPath = *confPath
+	}
+	if *processID != "" {
+		opt.ProcessID = *processID
+	}
+	if *logDir != "" {
+		opt.LogDir = *logDir
+	}
 }
 
 // NewApp 创建app
