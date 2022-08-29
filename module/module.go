@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//Package module 模块定义
+// Package module 模块定义
 package module
 
 import (
@@ -38,13 +38,13 @@ type ServerSession interface {
 	GetApp() App
 	GetNode() *registry.Node
 	SetNode(node *registry.Node) (err error)
-	Call(ctx context.Context, _func string, params ...interface{}) (interface{}, string)
+	Call(ctx context.Context, _func string, params ...interface{}) (interface{}, error)
 	CallNR(_func string, params ...interface{}) (err error)
-	CallArgs(ctx context.Context, _func string, ArgsType []string, args [][]byte) (interface{}, string)
+	CallArgs(ctx context.Context, _func string, ArgsType []string, args [][]byte) (interface{}, error)
 	CallNRArgs(_func string, ArgsType []string, args [][]byte) (err error)
 }
 
-//App mqant应用定义
+// App mqant应用定义
 type App interface {
 	UpdateOptions(opts ...Option) error
 	Run(mods ...Module) error
@@ -64,9 +64,9 @@ type App interface {
 	GetServersByType(Type string) []ServerSession
 	GetSettings() conf.Config //获取配置信息
 
-	Invoke(module RPCModule, moduleType string, _func string, params ...interface{}) (interface{}, string)
+	Invoke(module RPCModule, moduleType string, _func string, params ...interface{}) (interface{}, error)
 	InvokeNR(module RPCModule, moduleType string, _func string, params ...interface{}) error
-	Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, string)
+	Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, error)
 
 	/**
 	添加一个 自定义参数序列化接口
@@ -82,11 +82,11 @@ type App interface {
 	OnModuleInited(func(app App, module Module)) error
 	OnStartup(func(app App)) error
 
-	SetProtocolMarshal(protocolMarshal func(Trace string, Result interface{}, Error string) (ProtocolMarshal, string)) error
+	SetProtocolMarshal(protocolMarshal func(trace string, result interface{}, err error) (ProtocolMarshal, error)) error
 	/**
 	与客户端通信的协议包接口
 	*/
-	ProtocolMarshal(Trace string, Result interface{}, Error string) (ProtocolMarshal, string)
+	ProtocolMarshal(trace string, result interface{}, err error) (ProtocolMarshal, error)
 	NewProtocolMarshal(data []byte) ProtocolMarshal
 	GetProcessID() string
 	WorkDir() string
@@ -109,9 +109,9 @@ type RPCModule interface {
 	context.Context
 	Module
 	GetServerID() string //模块类型
-	Invoke(moduleType string, _func string, params ...interface{}) (interface{}, string)
+	Invoke(moduleType string, _func string, params ...interface{}) (interface{}, error)
 	InvokeNR(moduleType string, _func string, params ...interface{}) error
-	InvokeArgs(moduleType string, _func string, ArgsType []string, args [][]byte) (interface{}, string)
+	InvokeArgs(moduleType string, _func string, ArgsType []string, args [][]byte) (interface{}, error)
 	InvokeNRArgs(moduleType string, _func string, ArgsType []string, args [][]byte) error
 
 	//	Call 通用RPC调度函数
@@ -120,7 +120,7 @@ type RPCModule interface {
 	//	_func		string						需要调度的服务方法
 	//	param 		mqrpc.ParamOption			方法传参
 	//	opts ...selector.SelectOption			服务发现模块过滤，可以用来选择调用哪个服务节点
-	Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, string)
+	Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, error)
 	GetModuleSettings() (settings *conf.ModuleSettings)
 	/**
 	filter		 调用者服务类型    moduleType|moduleType@moduleID
@@ -130,7 +130,7 @@ type RPCModule interface {
 	GetExecuting() int64
 }
 
-//RPCSerialize 自定义参数序列化接口
+// RPCSerialize 自定义参数序列化接口
 type RPCSerialize interface {
 	/**
 	序列化 结构体-->[]byte

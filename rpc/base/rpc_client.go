@@ -15,6 +15,7 @@ package defaultrpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -53,7 +54,7 @@ func (c *RPCClient) Done() (err error) {
 	return
 }
 
-func (c *RPCClient) CallArgs(ctx context.Context, _func string, ArgsType []string, args [][]byte) (r interface{}, e string) {
+func (c *RPCClient) CallArgs(ctx context.Context, _func string, ArgsType []string, args [][]byte) (r interface{}, e error) {
 	caller, _ := os.Hostname()
 	if ctx != nil {
 		cr, ok := ctx.Value("caller").(string)
@@ -91,7 +92,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, ArgsType []strin
 	//} else
 	err = c.nats_client.Call(callInfo, callback)
 	if err != nil {
-		return nil, err.Error()
+		return nil, err
 	}
 	if ctx == nil {
 		var cancel context.CancelFunc
@@ -101,17 +102,20 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, ArgsType []strin
 	select {
 	case resultInfo, ok := <-callback:
 		if !ok {
-			return nil, "client closed"
+			return nil, errors.New("client closed")
+		}
+		if resultInfo.Error != "" {
+			return nil, errors.New(resultInfo.Error)
 		}
 		result, err := argsutil.Bytes2Args(c.app, resultInfo.ResultType, resultInfo.Result)
 		if err != nil {
-			return nil, err.Error()
+			return nil, err
 		}
-		return result, resultInfo.Error
+		return result, nil
 	case <-ctx.Done():
 		c.close_callback_chan(callback)
 		c.nats_client.Delete(rpcInfo.Cid)
-		return nil, "deadline exceeded"
+		return nil, errors.New("deadline exceeded")
 		//case <-time.After(time.Second * time.Duration(c.app.GetSettings().rpc.RPCExpired)):
 		//	close(callback)
 		//	c.nats_client.Delete(rpcInfo.Cid)
@@ -154,7 +158,7 @@ func (c *RPCClient) CallNRArgs(_func string, ArgsType []string, args [][]byte) (
 *
 消息请求 需要回复
 */
-func (c *RPCClient) Call(ctx context.Context, _func string, params ...interface{}) (interface{}, string) {
+func (c *RPCClient) Call(ctx context.Context, _func string, params ...interface{}) (interface{}, error) {
 	var ArgsType []string = make([]string, len(params))
 	var args [][]byte = make([][]byte, len(params))
 	var span log.TraceSpan = nil
@@ -162,7 +166,7 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...interface{
 		var err error = nil
 		ArgsType[k], args[k], err = argsutil.ArgsTypeAnd2Bytes(c.app, param)
 		if err != nil {
-			return nil, fmt.Sprintf("args[%d] error %s", k, err.Error())
+			return nil, fmt.Errorf("args[%d] error %s", k, err.Error())
 		}
 		switch v2 := param.(type) { //多选语句switch
 		case log.TraceSpan:
@@ -171,7 +175,7 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...interface{
 		}
 	}
 	start := time.Now()
-	r, errstr := c.CallArgs(ctx, _func, ArgsType, args)
+	r, err := c.CallArgs(ctx, _func, ArgsType, args)
 	if c.app.GetSettings().RPC.Log {
 		zap.L().Info("RPC Call",
 			log.Span(span),
@@ -179,9 +183,9 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...interface{
 			zap.String("func", _func),
 			zap.Duration("elapsed", time.Since(start)),
 			zap.Any("result", r),
-			zap.String("error", errstr))
+			zap.Error(err))
 	}
-	return r, errstr
+	return r, err
 }
 
 /*

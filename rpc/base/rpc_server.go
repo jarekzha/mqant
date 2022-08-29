@@ -329,7 +329,11 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	out := f.Call(in)
 	var rs []interface{}
 	if len(out) != 2 {
-		s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, fmt.Sprintf("%s rpc func(%s) return error %s\n", s.module.GetType(), callInfo.RPCInfo.Fn, "func(....)(result interface{}, err error)"))
+		s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid,
+			fmt.Sprintf("%s rpc func(%s) return error %s\n",
+				s.module.GetType(),
+				callInfo.RPCInfo.Fn,
+				"func(....)(result interface{}, err error)"))
 		return
 	}
 	if len(out) > 0 { //prepare out paras
@@ -351,7 +355,11 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	case nil:
 		rerr = ""
 	default:
-		s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, fmt.Sprintf("%s rpc func(%s) return error %s\n", s.module.GetType(), callInfo.RPCInfo.Fn, "func(....)(result interface{}, err error)"))
+		s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid,
+			fmt.Sprintf("%s rpc func(%s) return error %s\n",
+				s.module.GetType(),
+				callInfo.RPCInfo.Fn,
+				"func(....)(result interface{}, err error)"))
 		return
 	}
 	argsType, args, err := argsutil.ArgsTypeAnd2Bytes(s.app, rs[0])

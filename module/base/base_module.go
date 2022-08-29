@@ -176,7 +176,7 @@ func (m *BaseModule) GetRouteServer(moduleType string, opts ...selector.SelectOp
 }
 
 // Invoke  Invoke
-func (m *BaseModule) Invoke(moduleType string, _func string, params ...interface{}) (result interface{}, err string) {
+func (m *BaseModule) Invoke(moduleType string, _func string, params ...interface{}) (result interface{}, err error) {
 	return m.App.Invoke(m.GetSubclass(), moduleType, _func, params...)
 }
 
@@ -186,10 +186,10 @@ func (m *BaseModule) InvokeNR(moduleType string, _func string, params ...interfa
 }
 
 // InvokeArgs  InvokeArgs
-func (m *BaseModule) InvokeArgs(moduleType string, _func string, ArgsType []string, args [][]byte) (result interface{}, err string) {
+func (m *BaseModule) InvokeArgs(moduleType string, _func string, ArgsType []string, args [][]byte) (result interface{}, err error) {
 	server, e := m.App.GetRouteServer(moduleType)
 	if e != nil {
-		err = e.Error()
+		err = e
 		return
 	}
 	return server.CallArgs(nil, _func, ArgsType, args)
@@ -205,7 +205,7 @@ func (m *BaseModule) InvokeNRArgs(moduleType string, _func string, ArgsType []st
 }
 
 // Call  Call
-func (m *BaseModule) Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, string) {
+func (m *BaseModule) Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, error) {
 	return m.App.Call(ctx, moduleType, _func, param, opts...)
 }
 

@@ -69,28 +69,32 @@ func (c *serverSession) SetNode(node *registry.Node) (err error) {
 	return
 }
 
-/**
+/*
+*
 消息请求 需要回复
 */
-func (c *serverSession) Call(ctx context.Context, _func string, params ...interface{}) (interface{}, string) {
+func (c *serverSession) Call(ctx context.Context, _func string, params ...interface{}) (interface{}, error) {
 	return c.rpc.Call(ctx, _func, params...)
 }
 
-/**
+/*
+*
 消息请求 不需要回复
 */
 func (c *serverSession) CallNR(_func string, params ...interface{}) (err error) {
 	return c.rpc.CallNR(_func, params...)
 }
 
-/**
+/*
+*
 消息请求 需要回复
 */
-func (c *serverSession) CallArgs(ctx context.Context, _func string, ArgsType []string, args [][]byte) (interface{}, string) {
+func (c *serverSession) CallArgs(ctx context.Context, _func string, ArgsType []string, args [][]byte) (interface{}, error) {
 	return c.rpc.CallArgs(ctx, _func, ArgsType, args)
 }
 
-/**
+/*
+*
 消息请求 不需要回复
 */
 func (c *serverSession) CallNRArgs(_func string, ArgsType []string, args [][]byte) (err error) {

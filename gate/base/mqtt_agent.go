@@ -215,26 +215,26 @@ func (age *agent) OnRecover(pack *mqtt.Pack) {
 	if err != nil {
 		zap.L().Error("Gate OnRecover fail", zap.Error(err))
 		pub := pack.GetVariable().(*mqtt.Publish)
-		age.toResult(age, *pub.GetTopic(), nil, err.Error())
+		age.toResult(age, *pub.GetTopic(), nil, err)
 	} else {
 		go age.recoverworker(pack)
 	}
 }
 
-func (age *agent) toResult(a *agent, Topic string, Result interface{}, Error string) error {
-	switch v2 := Result.(type) {
+func (age *agent) toResult(a *agent, topic string, result interface{}, err error) error {
+	switch v2 := result.(type) {
 	case module.ProtocolMarshal:
-		return a.WriteMsg(Topic, v2.GetData())
+		return a.WriteMsg(topic, v2.GetData())
 	}
-	b, err := a.module.GetApp().ProtocolMarshal(a.session.TraceID(), Result, Error)
-	if err == "" {
+	b, err := a.module.GetApp().ProtocolMarshal(a.session.TraceID(), result, err)
+	if err != nil {
 		if b != nil {
-			return a.WriteMsg(Topic, b.GetData())
+			return a.WriteMsg(topic, b.GetData())
 		}
 		return nil
 	}
 	br, _ := a.module.GetApp().ProtocolMarshal(a.session.TraceID(), nil, err)
-	return a.WriteMsg(Topic, br.GetData())
+	return a.WriteMsg(topic, br.GetData())
 }
 
 func (age *agent) recoverworker(pack *mqtt.Pack) {
@@ -270,12 +270,12 @@ func (age *agent) recoverworker(pack *mqtt.Pack) {
 			needreturn, result, err := age.gate.GetRouteHandler().OnRoute(age.GetSession(), *pub.GetTopic(), pub.GetMsg())
 			if err != nil {
 				if needreturn {
-					toResult(age, *pub.GetTopic(), result, err.Error())
+					toResult(age, *pub.GetTopic(), result, err)
 				}
 				return
 			}
 			if needreturn {
-				toResult(age, *pub.GetTopic(), result, "")
+				toResult(age, *pub.GetTopic(), result, nil)
 			}
 		} else {
 			topics := strings.Split(*pub.GetTopic(), "/")
@@ -283,7 +283,7 @@ func (age *agent) recoverworker(pack *mqtt.Pack) {
 			if len(topics) < 2 {
 				errorstr := "Topic must be [moduleType@moduleID]/[handler]|[moduleType@moduleID]/[handler]/[msgid]"
 				zap.L().Error(errorstr)
-				toResult(age, *pub.GetTopic(), nil, errorstr)
+				toResult(age, *pub.GetTopic(), nil, errors.New(errorstr))
 				return
 			} else if len(topics) == 3 {
 				msgid = topics[2]
@@ -291,7 +291,7 @@ func (age *agent) recoverworker(pack *mqtt.Pack) {
 			startsWith := strings.HasPrefix(topics[1], "HD_")
 			if !startsWith {
 				if msgid != "" {
-					toResult(age, *pub.GetTopic(), nil, fmt.Sprintf("Method(%s) must begin with 'HD_'", topics[1]))
+					toResult(age, *pub.GetTopic(), nil, fmt.Errorf("Method(%s) must begin with 'HD_'", topics[1]))
 				}
 				return
 			}
@@ -300,7 +300,7 @@ func (age *agent) recoverworker(pack *mqtt.Pack) {
 			serverSession, err := age.module.GetRouteServer(topics[0])
 			if err != nil {
 				if msgid != "" {
-					toResult(age, *pub.GetTopic(), nil, fmt.Sprintf("Service(type:%s) not found", topics[0]))
+					toResult(age, *pub.GetTopic(), nil, fmt.Errorf("Service(type:%s) not found", topics[0]))
 				}
 				return
 			}
@@ -310,7 +310,7 @@ func (age *agent) recoverworker(pack *mqtt.Pack) {
 				err := json.Unmarshal(pub.GetMsg(), &obj)
 				if err != nil {
 					if msgid != "" {
-						toResult(age, *pub.GetTopic(), nil, "The JSON format is incorrect")
+						toResult(age, *pub.GetTopic(), nil, errors.New("The JSON format is incorrect"))
 					}
 					return
 				}

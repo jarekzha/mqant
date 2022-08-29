@@ -50,7 +50,7 @@ type GateHandler interface {
 	OnDestroy()                                                                  //退出事件,主动关闭所有的连接
 }
 
-//Session session代表一个客户端连接,不是线程安全的
+// Session session代表一个客户端连接,不是线程安全的
 type Session interface {
 	GetIP() string
 	GetTopic() string
@@ -79,27 +79,27 @@ type Session interface {
 	//网关本地的额外数据,不会再rpc中传递
 	SetLocalUserData(data interface{}) error
 	Serializable() ([]byte, error)
-	Update() (err string)
-	Bind(UserID string) (err string)
-	UnBind() (err string)
-	Push() (err string)
-	Set(key string, value string) (err string)
-	SetPush(key string, value string) (err string)    //设置值以后立即推送到gate网关,跟Set功能相同
-	SetBatch(settings map[string]string) (err string) //批量设置settings,跟当前已存在的settings合并,如果跟当前已存在的key重复则会被新value覆盖
+	Update() (err error)
+	Bind(UserID string) (err error)
+	UnBind() (err error)
+	Push() (err error)
+	Set(key string, value string) (err error)
+	SetPush(key string, value string) (err error)    //设置值以后立即推送到gate网关,跟Set功能相同
+	SetBatch(settings map[string]string) (err error) //批量设置settings,跟当前已存在的settings合并,如果跟当前已存在的key重复则会被新value覆盖
 	Get(key string) (result string)
 	//Load 跟Get方法类似，但如果key不存在则 ok会返回false
 	Load(key string) (result string, ok bool)
-	Remove(key string) (err string)
-	Send(topic string, body []byte) (err string)
-	SendNR(topic string, body []byte) (err string)
-	SendBatch(Sessionids string, topic string, body []byte) (int64, string) //想该客户端的网关批量发送消息
+	Remove(key string) (err error)
+	Send(topic string, body []byte) (err error)
+	SendNR(topic string, body []byte) (err error)
+	SendBatch(Sessionids string, topic string, body []byte) (int64, error) //想该客户端的网关批量发送消息
 	//查询某一个userId是否连接中，这里只是查询这一个网关里面是否有userId客户端连接，如果有多个网关就需要遍历了
-	IsConnect(Userid string) (result bool, err string)
+	IsConnect(Userid string) (result bool, err error)
 	//是否是访客(未登录) ,默认判断规则为 userId==""代表访客
 	IsGuest() bool
 	//设置自动的访客判断函数,记得一定要在全局的时候设置这个值,以免部分模块因为未设置这个判断函数造成错误的判断
 	JudgeGuest(judgeGuest func(session Session) bool)
-	Close() (err string)
+	Close() (err error)
 	Clone() Session
 
 	CreateTrace()

@@ -45,8 +45,8 @@ import (
 
 type resultInfo struct {
 	Trace  string
-	Error  string      //错误结果 如果为nil表示请求正确
-	Result interface{} //结果
+	Error  string      // 错误结果 如果为nil表示请求正确
+	Result interface{} // 结果
 }
 
 type protocolMarshalImp struct {
@@ -181,7 +181,7 @@ type DefaultApp struct {
 	configurationLoaded func(app module.App)
 	startup             func(app module.App)
 	moduleInited        func(app module.App, module module.Module)
-	protocolMarshal     func(Trace string, Result interface{}, Error string) (module.ProtocolMarshal, string)
+	protocolMarshal     func(trace string, result interface{}, err error) (module.ProtocolMarshal, error)
 }
 
 // Run 运行应用
@@ -423,10 +423,10 @@ func (app *DefaultApp) WorkDir() string {
 }
 
 // Invoke Invoke
-func (app *DefaultApp) Invoke(module module.RPCModule, moduleType string, _func string, params ...interface{}) (result interface{}, err string) {
+func (app *DefaultApp) Invoke(module module.RPCModule, moduleType string, _func string, params ...interface{}) (result interface{}, err error) {
 	server, e := app.GetRouteServer(moduleType)
 	if e != nil {
-		err = e.Error()
+		err = e
 		return
 	}
 	return server.Call(nil, _func, params...)
@@ -434,35 +434,19 @@ func (app *DefaultApp) Invoke(module module.RPCModule, moduleType string, _func 
 
 // InvokeNR InvokeNR
 func (app *DefaultApp) InvokeNR(module module.RPCModule, moduleType string, _func string, params ...interface{}) (err error) {
-	server, err := app.GetRouteServer(moduleType)
-	if err != nil {
+	server, e := app.GetRouteServer(moduleType)
+	if e != nil {
+		err = e
 		return
 	}
 	return server.CallNR(_func, params...)
 }
 
-//func (app *DefaultApp) RpcInvokeArgs(module module.RPCModule, moduleType string, _func string, ArgsType []string, args [][]byte) (result interface{}, err string) {
-//	server, e := app.GetRouteServer(moduleType)
-//	if e != nil {
-//		err = e.Error()
-//		return
-//	}
-//	return server.CallArgs(nil, _func, ArgsType, args)
-//}
-//
-//func (app *DefaultApp) RpcInvokeNRArgs(module module.RPCModule, moduleType string, _func string, ArgsType []string, args [][]byte) (err error) {
-//	server, err := app.GetRouteServer(moduleType)
-//	if err != nil {
-//		return
-//	}
-//	return server.CallNRArgs(_func, ArgsType, args)
-//}
-
 // Call Call
-func (app *DefaultApp) Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (result interface{}, errstr string) {
-	server, err := app.GetRouteServer(moduleType, opts...)
-	if err != nil {
-		errstr = err.Error()
+func (app *DefaultApp) Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (result interface{}, err error) {
+	server, e := app.GetRouteServer(moduleType, opts...)
+	if e != nil {
+		err = e
 		return
 	}
 	return server.Call(ctx, _func, param()...)
@@ -492,26 +476,29 @@ func (app *DefaultApp) OnStartup(_func func(app module.App)) error {
 }
 
 // SetProtocolMarshal 设置RPC数据包装器
-func (app *DefaultApp) SetProtocolMarshal(protocolMarshal func(Trace string, Result interface{}, Error string) (module.ProtocolMarshal, string)) error {
+func (app *DefaultApp) SetProtocolMarshal(protocolMarshal func(trace string, result interface{}, err error) (module.ProtocolMarshal, error)) error {
 	app.protocolMarshal = protocolMarshal
 	return nil
 }
 
 // ProtocolMarshal RPC数据包装器
-func (app *DefaultApp) ProtocolMarshal(Trace string, Result interface{}, Error string) (module.ProtocolMarshal, string) {
+func (app *DefaultApp) ProtocolMarshal(trace string, result interface{}, err error) (module.ProtocolMarshal, error) {
 	if app.protocolMarshal != nil {
-		return app.protocolMarshal(Trace, Result, Error)
+		return app.protocolMarshal(trace, result, err)
 	}
 	r := &resultInfo{
-		Trace:  Trace,
-		Error:  Error,
-		Result: Result,
+		Trace:  trace,
+		Result: result,
 	}
+	if err != nil {
+		r.Error = err.Error()
+	}
+
 	b, err := json.Marshal(r)
 	if err == nil {
-		return app.NewProtocolMarshal(b), ""
+		return app.NewProtocolMarshal(b), nil
 	}
-	return nil, err.Error()
+	return nil, err
 }
 
 // NewProtocolMarshal 创建RPC数据包装器

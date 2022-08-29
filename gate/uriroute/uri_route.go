@@ -124,8 +124,8 @@ func (u *URIRoute) OnRoute(session gate.Session, topic string, msg []byte) (bool
 				ctx, cancel := context.WithTimeout(context.TODO(), u.CallTimeOut)
 				defer cancel()
 				result, e := serverSession.Call(ctx, _func, session, bean)
-				if e != "" {
-					return needreturn, result, errors.New(e)
+				if e != nil {
+					return needreturn, result, e
 				}
 				return needreturn, result, nil
 			}
@@ -166,8 +166,8 @@ func (u *URIRoute) OnRoute(session gate.Session, topic string, msg []byte) (bool
 		ctx, cancel := context.WithTimeout(context.TODO(), u.CallTimeOut)
 		defer cancel()
 		result, e := serverSession.CallArgs(ctx, _func, ArgsType, args)
-		if e != "" {
-			return needreturn, result, errors.New(e)
+		if e != nil {
+			return needreturn, result, e
 		}
 		return needreturn, result, nil
 	}
