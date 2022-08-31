@@ -193,9 +193,9 @@ func (app *DefaultApp) Run(mods ...module.Module) error {
 	}
 	var cof conf.Config
 	fmt.Println("Server configuration path :", app.opts.ConfPath)
-	conf.LoadConfig(f.Name()) //加载配置文件
+	conf.LoadConfig(f.Name()) // 加载配置文件
 	cof = conf.Conf
-	app.Configure(cof) //解析配置信息
+	app.Configure(cof) // 解析配置信息
 
 	if app.configurationLoaded != nil {
 		app.configurationLoaded(app)
