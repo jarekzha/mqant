@@ -7,20 +7,28 @@ package conf
 
 import (
 	"fmt"
+	"log"
+	"path"
 
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/json"
+	"github.com/knadh/koanf/parsers/toml"
+	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
 )
 
 var k = koanf.New(".")
 
 // LoadConfig 加载配置
-func LoadConfig(path string) {
-	// Read config.
-	if err := readFileInto(path); err != nil {
-		panic(err)
-	}
+func LoadConfig(configFileUrl string) {
+	// 读取配置文件
+	readFromFile(configFileUrl)
+
+	// 写入到struct中
+	k.UnmarshalWithConf("", &Conf, koanf.UnmarshalConf{Tag: "mqant"})
+	fmt.Println(Conf)
+
+	// 默认值
 	if Conf.RPC.RPCExpired == 0 {
 		Conf.RPC.RPCExpired = 3
 	}
@@ -28,15 +36,27 @@ func LoadConfig(path string) {
 		Conf.RPC.MaxCoroutine = 100
 	}
 }
-func readFileInto(path string) error {
-	if e := k.Load(file.Provider(path), json.Parser()); e != nil {
-		return fmt.Errorf("loading path %s fail: %s", path, e.Error())
+
+// 从文件读取
+func readFromFile(configFileUrl string) error {
+	extension := path.Ext(configFileUrl)
+	extension = extension[1:]
+	var parser koanf.Parser
+	switch extension {
+	case "json":
+		parser = json.Parser()
+	case "yaml":
+		parser = yaml.Parser()
+	case "toml":
+		parser = toml.Parser()
+	default:
+		log.Fatalf("loading config %s invalid file exension, support [json, yaml, toml]", configFileUrl)
+	}
+
+	if e := k.Load(file.Provider(configFileUrl), parser); e != nil {
+		log.Fatalf("loading config %s fail: %s", configFileUrl, e.Error())
 	}
 
 	fmt.Println(k.All())
-
-	k.UnmarshalWithConf("", &Conf, koanf.UnmarshalConf{Tag: "mqant"})
-	fmt.Println(Conf)
-
 	return nil
 }

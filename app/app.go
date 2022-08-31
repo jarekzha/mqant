@@ -112,7 +112,7 @@ func newOptions(opts ...module.Option) module.Options {
 	opt.WorkDir = appDir
 
 	if opt.ConfPath == "" {
-		opt.ConfPath = fmt.Sprintf("%s/bin/conf/server.json", appDir)
+		opt.ConfPath = fmt.Sprintf("%s/bin/conf/server.yaml", appDir)
 	}
 	if opt.LogDir == "" {
 		opt.LogDir = fmt.Sprintf("%s/bin/logs", appDir)
@@ -138,7 +138,7 @@ func newOptions(opts ...module.Option) module.Options {
 // 解析命令行参数
 func parseFlag(opt *module.Options) {
 	workDir := flag.String("wd", "", "Server work directory")
-	confPath := flag.String("conf", "", "Server configuration file path")
+	confPath := flag.String("conf", "", "Server configuration file path(json,yaml,toml)")
 	processID := flag.String("pid", "development", "Server ProcessID?")
 	logDir := flag.String("log", "", "Log file directory?")
 	flag.Parse() // 解析输入的参数
@@ -186,17 +186,12 @@ type DefaultApp struct {
 
 // Run 运行应用
 func (app *DefaultApp) Run(mods ...module.Module) error {
-	f, err := os.Open(app.opts.ConfPath)
-	if err != nil {
-		//文件不存在
-		panic(fmt.Sprintf("Config path error %v", err))
-	}
-	var cof conf.Config
-	fmt.Println("Server configuration path :", app.opts.ConfPath)
-	conf.LoadConfig(f.Name()) // 加载配置文件
-	cof = conf.Conf
-	app.Configure(cof) // 解析配置信息
-
+	// 加载配置文件
+	fmt.Println("Server configuration path:", app.opts.ConfPath)
+	conf.LoadConfig(app.opts.ConfPath)
+	// 解析配置信息
+	app.Configure(conf.Conf)
+	// 配置解析
 	if app.configurationLoaded != nil {
 		app.configurationLoaded(app)
 	}
@@ -205,7 +200,7 @@ func (app *DefaultApp) Run(mods ...module.Module) error {
 		log.WithProcessID(app.opts.ProcessID),
 		log.WithLogDir(app.opts.LogDir),
 		log.WithLogFileName(app.opts.LogFileName),
-		log.WithLogSetting(cof.Log))
+		log.WithLogSetting(conf.Conf.Log))
 	zap.L().Info("Framework mqant starting up", zap.String("version", app.opts.Version))
 
 	manager := basemodule.NewModuleManager()
