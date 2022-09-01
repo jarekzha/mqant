@@ -227,7 +227,7 @@ func (age *agent) toResult(a *agent, topic string, result interface{}, err error
 		return a.WriteMsg(topic, v2.GetData())
 	}
 	b, err := a.module.GetApp().ProtocolMarshal(a.session.TraceID(), result, err)
-	if err != nil {
+	if err == nil {
 		if b != nil {
 			return a.WriteMsg(topic, b.GetData())
 		}
