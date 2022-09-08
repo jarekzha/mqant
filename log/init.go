@@ -18,12 +18,16 @@ var sugaredLogger *zap.SugaredLogger
 func Init(opts ...Option) {
 	options := NewOptions(opts...)
 
+	zapOptions := []zap.Option{
+		zap.AddStacktrace(zap.ErrorLevel),
+	}
+
 	var e error
 	if options.Debug {
-		logger, e = zap.NewDevelopment()
+		logger, e = zap.NewDevelopment(zapOptions...)
 	} else {
-		commonFields := zap.Fields(zap.String("process", options.ProcessID))
-		logger, e = zap.NewProduction(commonFields)
+		zapOptions = append(zapOptions, zap.Fields(zap.String("process", options.ProcessID)))
+		logger, e = zap.NewProduction(zapOptions...)
 	}
 
 	sugaredLogger = logger.Sugar()
