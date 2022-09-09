@@ -41,7 +41,7 @@ type TCPServer struct {
 // Start 开始tcp监听
 func (server *TCPServer) Start() {
 	server.init()
-	zap.L().Info("TCP Listen", zap.String("addr", server.Addr))
+	zap.S().Infof("TCP Listen %s", server.Addr)
 	go server.run()
 }
 

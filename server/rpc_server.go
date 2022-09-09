@@ -140,7 +140,7 @@ func (s *rpcServer) ServiceRegister() error {
 	s.Unlock()
 
 	if !registered {
-		zap.S().Infof("Registering node: %s", node.ID)
+		zap.S().Infof("Registering node %s", node.ID)
 	}
 
 	// create registry options
