@@ -60,7 +60,7 @@ func (p *protocolMarshalImp) GetData() []byte {
 func newOptions(opts ...module.Option) module.Options {
 	opt := module.Options{
 		Registry:         registry.DefaultRegistry,
-		Selector:         cache.NewSelector(cache.TTL(time.Hour)),
+		Selector:         cache.NewSelector(),
 		RegisterInterval: time.Second * time.Duration(10),
 		RegisterTTL:      time.Second * time.Duration(20),
 		KillWaitTTL:      time.Second * time.Duration(60),
@@ -162,7 +162,11 @@ func NewApp(opts ...module.Option) module.App {
 	options := newOptions(opts...)
 	app := new(DefaultApp)
 	app.opts = options
-	options.Selector.Init(selector.SetWatcher(app.Watcher))
+
+	if !options.Debug {
+		options.Selector.Init(selector.SetWatcher(app.Watcher))
+	}
+
 	app.rpcserializes = map[string]module.RPCSerialize{}
 	return app
 }
@@ -286,6 +290,7 @@ func (app *DefaultApp) Watcher(node *registry.Node) {
 	//把注销的服务ServerSession删除掉
 	session, ok := app.serverList.Load(node.ID)
 	if ok && session != nil {
+		zap.L().Info("Watcher delete node", zap.String("id", node.ID))
 		session.(module.ServerSession).GetRPC().Done()
 		app.serverList.Delete(node.ID)
 	}
@@ -298,6 +303,11 @@ func (app *DefaultApp) Configure(settings conf.Config) error {
 	// RPC 设置
 	app.opts.RPCExpired = time.Second * time.Duration(settings.RPC.RPCExpired)
 	app.opts.RPCMaxCoroutine = settings.RPC.MaxCoroutine
+
+	// debug模式下不超时
+	if app.opts.Debug {
+		app.opts.RPCExpired = time.Hour
+	}
 
 	return nil
 }
