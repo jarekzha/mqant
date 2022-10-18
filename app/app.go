@@ -60,7 +60,7 @@ func (p *protocolMarshalImp) GetData() []byte {
 func newOptions(opts ...module.Option) module.Options {
 	opt := module.Options{
 		Registry:         registry.DefaultRegistry,
-		Selector:         cache.NewSelector(),
+		Selector:         cache.NewSelector(cache.TTL(time.Hour)),
 		RegisterInterval: time.Second * time.Duration(10),
 		RegisterTTL:      time.Second * time.Duration(20),
 		KillWaitTTL:      time.Second * time.Duration(60),
@@ -294,6 +294,11 @@ func (app *DefaultApp) Watcher(node *registry.Node) {
 // Configure 重设应用配置
 func (app *DefaultApp) Configure(settings conf.Config) error {
 	app.settings = settings
+
+	// RPC 设置
+	app.opts.RPCExpired = time.Second * time.Duration(settings.RPC.RPCExpired)
+	app.opts.RPCMaxCoroutine = settings.RPC.MaxCoroutine
+
 	return nil
 }
 

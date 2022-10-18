@@ -30,10 +30,7 @@ func LoadConfig(configFileUrl string) {
 
 	// 默认值
 	if Conf.RPC.RPCExpired == 0 {
-		Conf.RPC.RPCExpired = 3
-	}
-	if Conf.RPC.MaxCoroutine == 0 {
-		Conf.RPC.MaxCoroutine = 100
+		Conf.RPC.RPCExpired = 10
 	}
 }
 
