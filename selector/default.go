@@ -53,13 +53,9 @@ func (r *defaultSelector) Select(service string, opts ...SelectOption) (Next, er
 	return sopts.Strategy(services), nil
 }
 
-func (r *defaultSelector) Mark(service string, node *registry.Node, err error) {
-	return
-}
+func (r *defaultSelector) Mark(service string, node *registry.Node, err error) {}
 
-func (r *defaultSelector) Reset(service string) {
-	return
-}
+func (r *defaultSelector) Reset(service string) {}
 
 func (r *defaultSelector) Close() error {
 	return nil

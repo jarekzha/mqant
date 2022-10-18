@@ -14,20 +14,20 @@ func TestFilterEndpoint(t *testing.T) {
 	}{
 		{
 			services: []*registry.Service{
-				&registry.Service{
+				{
 					Name:    "test",
 					Version: "1.0.0",
 					Endpoints: []*registry.Endpoint{
-						&registry.Endpoint{
+						{
 							Name: "Foo.Bar",
 						},
 					},
 				},
-				&registry.Service{
+				{
 					Name:    "test",
 					Version: "1.1.0",
 					Endpoints: []*registry.Endpoint{
-						&registry.Endpoint{
+						{
 							Name: "Baz.Bar",
 						},
 					},
@@ -38,20 +38,20 @@ func TestFilterEndpoint(t *testing.T) {
 		},
 		{
 			services: []*registry.Service{
-				&registry.Service{
+				{
 					Name:    "test",
 					Version: "1.0.0",
 					Endpoints: []*registry.Endpoint{
-						&registry.Endpoint{
+						{
 							Name: "Foo.Bar",
 						},
 					},
 				},
-				&registry.Service{
+				{
 					Name:    "test",
 					Version: "1.1.0",
 					Endpoints: []*registry.Endpoint{
-						&registry.Endpoint{
+						{
 							Name: "Foo.Bar",
 						},
 					},
@@ -95,11 +95,11 @@ func TestFilterLabel(t *testing.T) {
 	}{
 		{
 			services: []*registry.Service{
-				&registry.Service{
+				{
 					Name:    "test",
 					Version: "1.0.0",
 					Nodes: []*registry.Node{
-						&registry.Node{
+						{
 							ID:      "test-1",
 							Address: "localhost",
 							Metadata: map[string]string{
@@ -107,12 +107,11 @@ func TestFilterLabel(t *testing.T) {
 							},
 						},
 					},
-				},
-				&registry.Service{
+				}, {
 					Name:    "test",
 					Version: "1.1.0",
 					Nodes: []*registry.Node{
-						&registry.Node{
+						{
 							ID:      "test-2",
 							Address: "localhost",
 							Metadata: map[string]string{
@@ -127,21 +126,20 @@ func TestFilterLabel(t *testing.T) {
 		},
 		{
 			services: []*registry.Service{
-				&registry.Service{
+				{
 					Name:    "test",
 					Version: "1.0.0",
 					Nodes: []*registry.Node{
-						&registry.Node{
+						{
 							ID:      "test-1",
 							Address: "localhost",
 						},
 					},
-				},
-				&registry.Service{
+				}, {
 					Name:    "test",
 					Version: "1.1.0",
 					Nodes: []*registry.Node{
-						&registry.Node{
+						{
 							ID:      "test-2",
 							Address: "localhost",
 						},
@@ -187,11 +185,10 @@ func TestFilterVersion(t *testing.T) {
 	}{
 		{
 			services: []*registry.Service{
-				&registry.Service{
+				{
 					Name:    "test",
 					Version: "1.0.0",
-				},
-				&registry.Service{
+				}, {
 					Name:    "test",
 					Version: "1.1.0",
 				},
@@ -201,11 +198,10 @@ func TestFilterVersion(t *testing.T) {
 		},
 		{
 			services: []*registry.Service{
-				&registry.Service{
+				{
 					Name:    "test",
 					Version: "1.0.0",
-				},
-				&registry.Service{
+				}, {
 					Name:    "test",
 					Version: "1.1.0",
 				},

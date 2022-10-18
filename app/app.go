@@ -100,6 +100,9 @@ func newOptions(opts ...module.Option) module.Options {
 		}
 		os.Chdir(opt.WorkDir)
 		appDir, err = os.Getwd()
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		var err error
 		appDir, err = os.Getwd()
@@ -174,11 +177,9 @@ func NewApp(opts ...module.Option) module.App {
 // DefaultApp 默认应用
 type DefaultApp struct {
 	//module.App
-	version       string
-	settings      conf.Config
-	serverList    sync.Map
-	opts          module.Options
-	defaultRoutes func(app module.App, Type string, hash string) module.ServerSession
+	settings   conf.Config
+	serverList sync.Map
+	opts       module.Options
 	//将一个RPC调用路由到新的路由上
 	mapRoute            func(app module.App, route string) string
 	rpcserializes       map[string]module.RPCSerialize
@@ -222,7 +223,7 @@ func (app *DefaultApp) Run(mods ...module.Module) error {
 	zap.L().Info("Framework mqant started", zap.String("version", app.opts.Version))
 	// close
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	sig := <-c
 	zap.L().Sync()
 	//如果一分钟都关不了则强制关闭
@@ -259,7 +260,7 @@ func (app *DefaultApp) SetMapRoute(fn func(app module.App, route string) string)
 // AddRPCSerialize AddRPCSerialize
 func (app *DefaultApp) AddRPCSerialize(name string, Interface module.RPCSerialize) error {
 	if _, ok := app.rpcserializes[name]; ok {
-		return fmt.Errorf("The name(%s) has been occupied", name)
+		return fmt.Errorf("rpc serialize name(%s) has been occupied", name)
 	}
 	app.rpcserializes[name] = Interface
 	return nil
@@ -439,7 +440,7 @@ func (app *DefaultApp) Invoke(module module.RPCModule, moduleType string, _func 
 		err = e
 		return
 	}
-	return server.Call(nil, _func, params...)
+	return server.Call(context.TODO(), _func, params...)
 }
 
 // InvokeNR InvokeNR

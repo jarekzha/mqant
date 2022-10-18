@@ -132,7 +132,7 @@ func (c *consulRegistry) Init(opts ...Option) error {
 
 func (c *consulRegistry) Deregister(s *Service) error {
 	if len(s.Nodes) == 0 {
-		return errors.New("Require at least one node")
+		return errors.New("require at least one node")
 	}
 
 	// delete our hash of the service
@@ -146,7 +146,7 @@ func (c *consulRegistry) Deregister(s *Service) error {
 
 func (c *consulRegistry) Register(s *Service, opts ...RegisterOption) error {
 	if len(s.Nodes) == 0 {
-		return errors.New("Require at least one node")
+		return errors.New("require at least one node")
 	}
 
 	var regTCPCheck bool

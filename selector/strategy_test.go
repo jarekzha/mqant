@@ -8,32 +8,29 @@ import (
 
 func TestStrategies(t *testing.T) {
 	testData := []*registry.Service{
-		&registry.Service{
+		{
 			Name:    "test1",
 			Version: "latest",
 			Nodes: []*registry.Node{
-				&registry.Node{
+				{
 					ID:      "test1-1",
 					Address: "10.0.0.1",
 					Port:    1001,
-				},
-				&registry.Node{
+				}, {
 					ID:      "test1-2",
 					Address: "10.0.0.2",
 					Port:    1002,
 				},
 			},
-		},
-		&registry.Service{
+		}, {
 			Name:    "test1",
 			Version: "default",
 			Nodes: []*registry.Node{
-				&registry.Node{
+				{
 					ID:      "test1-3",
 					Address: "10.0.0.3",
 					Port:    1003,
-				},
-				&registry.Node{
+				}, {
 					ID:      "test1-4",
 					Address: "10.0.0.4",
 					Port:    1004,
