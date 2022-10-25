@@ -23,7 +23,6 @@ import (
 	"github.com/jarekzha/mqant/module"
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	mqanttools "github.com/jarekzha/mqant/utils"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -124,7 +123,7 @@ func ArgsTypeAnd2Bytes(app module.App, arg interface{}) (string, []byte, error) 
 			if v2, ok := arg.(proto.Message); ok {
 				b, err := proto.Marshal(v2)
 				if err != nil {
-					zap.L().Error("proto.Marshal error", zap.Error(err))
+					log.Error("proto.Marshal error", log.Err(err))
 					return "", nil, fmt.Errorf("args [%s] proto.Marshal error %v", reflect.TypeOf(arg), err)
 				}
 				return fmt.Sprintf("%v@%v", Proto, reflect.TypeOf(arg)), b, nil

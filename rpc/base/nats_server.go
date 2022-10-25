@@ -19,11 +19,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	rpcpb "github.com/jarekzha/mqant/rpc/pb"
 	"github.com/nats-io/nats.go"
-	"go.uber.org/zap"
+
 	"google.golang.org/protobuf/proto"
 )
 
@@ -124,7 +125,7 @@ func (s *NatsServer) on_request_handle() (err error) {
 			buf := make([]byte, 1024)
 			l := runtime.Stack(buf, false)
 			errstr := string(buf[:l])
-			zap.S().Errorf("%s\n ----Stack----\n%s", rn, errstr)
+			log.Errorf("%s\n ----Stack----\n%s", rn, errstr)
 			fmt.Println(errstr)
 		}
 	}()
@@ -150,18 +151,18 @@ func (s *NatsServer) on_request_handle() (err error) {
 				//订阅已关闭，需要重新订阅
 				s.subs, err = s.app.Transport().SubscribeSync(s.addr)
 				if err != nil {
-					zap.L().Error("NatsServer SubscribeSync[1] fail", zap.Error(err))
+					log.Error("NatsServer SubscribeSync[1] fail", log.Err(err))
 					continue
 				}
 			}
 			continue
 		} else if err != nil {
-			zap.L().Warn("NatsServer read msg fail", zap.Error(err))
+			log.Warn("NatsServer read msg fail", log.Err(err))
 			if !s.subs.IsValid() {
 				//订阅已关闭，需要重新订阅
 				s.subs, err = s.app.Transport().SubscribeSync(s.addr)
 				if err != nil {
-					zap.L().Error("NatsServer SubscribeSync[2] fail", zap.Error(err))
+					log.Error("NatsServer SubscribeSync[2] fail", log.Err(err))
 					continue
 				}
 			}

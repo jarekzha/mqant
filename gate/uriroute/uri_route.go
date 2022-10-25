@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/jarekzha/mqant/gate"
+	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	argsutil "github.com/jarekzha/mqant/rpc/util"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 // FSelector 服务节点选择函数，可以自定义服务筛选规则
@@ -132,7 +132,7 @@ func (u *URIRoute) OnRoute(session gate.Session, topic string, msg []byte) (bool
 
 			e := serverSession.CallNR(_func, session, bean)
 			if e != nil {
-				zap.L().Warn("Gate rpc fail", zap.Error(e))
+				log.Warn("Gate rpc fail", log.Err(e))
 				return needreturn, nil, e
 			}
 
@@ -181,7 +181,7 @@ func (u *URIRoute) OnRoute(session gate.Session, topic string, msg []byte) (bool
 
 	e := serverSession.CallNRArgs(_func, ArgsType, args)
 	if e != nil {
-		zap.L().Warn("Gate rpc fail", zap.Error(e))
+		log.Warn("Gate rpc fail", log.Err(e))
 		return needreturn, nil, e
 	}
 

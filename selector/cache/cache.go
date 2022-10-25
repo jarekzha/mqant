@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/registry"
 	"github.com/jarekzha/mqant/selector"
-	"go.uber.org/zap"
 )
 
 type cacheSelector struct {
@@ -275,7 +275,7 @@ func (c *cacheSelector) run(name string) {
 			if c.quit() {
 				return
 			}
-			zap.L().Warn("Registry watch fail", zap.Error(err))
+			log.Warn("Registry watch fail", log.Err(err))
 			time.Sleep(time.Second)
 			continue
 		}

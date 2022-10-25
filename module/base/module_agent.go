@@ -20,8 +20,8 @@ import (
 	"sync"
 
 	"github.com/jarekzha/mqant/conf"
+	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
-	"go.uber.org/zap"
 )
 
 // ModuleAgent 模块结构
@@ -38,9 +38,9 @@ func run(m *ModuleAgent) {
 			if conf.LenStackBuf > 0 {
 				buf := make([]byte, conf.LenStackBuf)
 				l := runtime.Stack(buf, false)
-				zap.S().Errorf("%v: %s", r, buf[:l])
+				log.Errorf("%v: %s", r, buf[:l])
 			} else {
-				zap.S().Errorf("%v", r)
+				log.Errorf("%v", r)
 			}
 		}
 	}()
@@ -54,9 +54,9 @@ func destroy(m *ModuleAgent) {
 			if conf.LenStackBuf > 0 {
 				buf := make([]byte, conf.LenStackBuf)
 				l := runtime.Stack(buf, false)
-				zap.S().Errorf("%v: %s", r, buf[:l])
+				log.Errorf("%v: %s", r, buf[:l])
 			} else {
-				zap.S().Errorf("%v", r)
+				log.Errorf("%v", r)
 			}
 		}
 	}()

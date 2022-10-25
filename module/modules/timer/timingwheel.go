@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	"go.uber.org/zap"
+	"github.com/jarekzha/mqant/log"
 )
 
 var timeWheel *TimeWheel
@@ -164,7 +164,7 @@ func (tw *TimeWheel) scanAndRunTask(l *list.List) {
 					case error:
 						rn = r.(error).Error()
 					}
-					zap.S().Errorf("TimeWheel Job Recover %v", rn)
+					log.Errorf("TimeWheel Job Recover %v", rn)
 				}
 			}()
 			task.job(task.data)

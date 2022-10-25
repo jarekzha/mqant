@@ -26,7 +26,7 @@ import (
 	rpcpb "github.com/jarekzha/mqant/rpc/pb"
 	argsutil "github.com/jarekzha/mqant/rpc/util"
 	"github.com/jarekzha/mqant/utils/uuid"
-	"go.uber.org/zap"
+
 	"google.golang.org/protobuf/proto"
 )
 
@@ -40,7 +40,7 @@ func NewRPCClient(app module.App, session module.ServerSession) (mqrpc.RPCClient
 	rpc_client.app = app
 	nats_client, err := NewNatsClient(app, session)
 	if err != nil {
-		zap.L().Error("Nats client dial fail", zap.Error(err))
+		log.Error("Nats client dial fail", log.Err(err))
 		return nil, err
 	}
 	rpc_client.nats_client = nats_client
@@ -177,13 +177,13 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...interface{
 	start := time.Now()
 	r, err := c.CallArgs(ctx, _func, ArgsType, args)
 	if c.app.GetSettings().RPC.Log {
-		zap.L().Info("RPC Call",
+		log.Info("RPC Call",
 			log.Span(span),
-			zap.String("serverID", c.nats_client.session.GetID()),
-			zap.String("func", _func),
-			zap.Duration("elapsed", time.Since(start)),
-			zap.Any("result", r),
-			zap.Error(err))
+			log.String("serverID", c.nats_client.session.GetID()),
+			log.String("func", _func),
+			log.Duration("elapsed", time.Since(start)),
+			log.Any("result", r),
+			log.Err(err))
 	}
 	return r, err
 }
@@ -210,12 +210,12 @@ func (c *RPCClient) CallNR(_func string, params ...interface{}) (err error) {
 	start := time.Now()
 	err = c.CallNRArgs(_func, ArgsType, args)
 	if c.app.GetSettings().RPC.Log {
-		zap.L().Info("RPC CallNR",
+		log.Info("RPC CallNR",
 			log.Span(span),
-			zap.String("serverID", c.nats_client.session.GetID()),
-			zap.String("func", _func),
-			zap.Duration("elapsed", time.Since(start)),
-			zap.Error(err))
+			log.String("serverID", c.nats_client.session.GetID()),
+			log.String("func", _func),
+			log.Duration("elapsed", time.Since(start)),
+			log.Err(err))
 	}
 	return err
 }

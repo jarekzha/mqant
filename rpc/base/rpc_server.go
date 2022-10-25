@@ -21,11 +21,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	rpcpb "github.com/jarekzha/mqant/rpc/pb"
 	argsutil "github.com/jarekzha/mqant/rpc/util"
-	"go.uber.org/zap"
+
 	"google.golang.org/protobuf/proto"
 )
 
@@ -52,7 +53,7 @@ func NewRPCServer(app module.App, module module.Module) (mqrpc.RPCServer, error)
 
 	nats_server, err := NewNatsServer(app, rpc_server)
 	if err != nil {
-		zap.L().Error("AMQPServer dial fail", zap.Error(err))
+		log.Error("AMQPServer dial fail", log.Err(err))
 	}
 	rpc_server.nats_server = nats_server
 
@@ -161,7 +162,7 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 		//需要回复的才回复
 		err := callInfo.Agent.(mqrpc.MQServer).Callback(callInfo)
 		if err != nil {
-			zap.L().Warn("rpc callback err", zap.Error(err))
+			log.Warn("rpc callback err", log.Err(err))
 		}
 
 		//if callInfo.RPCInfo.Expired < (time.Now().UnixNano() / 1000000) {
@@ -176,7 +177,7 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 	} else {
 		//对于不需要回复的消息,可以判断一下是否出现错误，打印一些警告
 		if callInfo.Result.Error != "" {
-			zap.L().Warn("rpc callback err", zap.String("error", callInfo.Result.Error))
+			log.Warn("rpc callback err", log.String("error", callInfo.Result.Error))
 		}
 	}
 	if s.app.Options().ServerRPCHandler != nil {
@@ -229,7 +230,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 			l := runtime.Stack(buf, false)
 			errstr := string(buf[:l])
 			allError := fmt.Sprintf("%s rpc func(%s) error %s\n ----Stack----\n%s", s.module.GetType(), callInfo.RPCInfo.Fn, rn, errstr)
-			zap.S().Error(allError)
+			log.Error(allError)
 			s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, allError)
 		}
 	}()
@@ -304,7 +305,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 						elemp := reflect.New(rv)
 						err := json.Unmarshal(v2, elemp.Interface())
 						if err != nil {
-							zap.S().Errorf("%v []uint8--> %v error with='%v'", callInfo.RPCInfo.Fn, rv, err)
+							log.Errorf("%v []uint8--> %v error with='%v'", callInfo.RPCInfo.Fn, rv, err)
 							in[k] = reflect.ValueOf(ty)
 						} else {
 							in[k] = elemp.Elem()
@@ -377,10 +378,10 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	callInfo.ExecTime = time.Since(start).Nanoseconds()
 	s.doCallback(callInfo)
 	if s.app.GetSettings().RPC.Log {
-		zap.L().Info("RPC Exec ModuleType = %v Func = %v Elapsed = %v",
-			zap.String("moduleType", s.module.GetType()),
-			zap.String("func", callInfo.RPCInfo.Fn),
-			zap.Duration("elapsed", time.Since(start)))
+		log.Info("RPC Exec ModuleType = %v Func = %v Elapsed = %v",
+			log.String("moduleType", s.module.GetType()),
+			log.String("func", callInfo.RPCInfo.Fn),
+			log.Duration("elapsed", time.Since(start)))
 	}
 	if s.listener != nil {
 		s.listener.OnComplete(callInfo.RPCInfo.Fn, callInfo, resultInfo, time.Since(start).Nanoseconds())
@@ -400,7 +401,7 @@ func (s *RPCServer) runFunc(callInfo *mqrpc.CallInfo) {
 			case error:
 				rn = r.(error).Error()
 			}
-			zap.S().Errorf("recover", rn)
+			log.Errorf("recover", rn)
 			s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, rn)
 		}
 	}()

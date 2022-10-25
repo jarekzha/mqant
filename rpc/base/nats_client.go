@@ -19,12 +19,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	rpcpb "github.com/jarekzha/mqant/rpc/pb"
 	mqanttools "github.com/jarekzha/mqant/utils"
 	"github.com/nats-io/nats.go"
-	"go.uber.org/zap"
+
 	"google.golang.org/protobuf/proto"
 )
 
@@ -140,7 +141,7 @@ func (c *NatsClient) on_request_handle() (err error) {
 			buf := make([]byte, 1024)
 			l := runtime.Stack(buf, false)
 			errstr := string(buf[:l])
-			zap.S().Errorf("%s\n ----Stack----\n%s", rn, errstr)
+			log.Errorf("%s\n ----Stack----\n%s", rn, errstr)
 			fmt.Println(errstr)
 		}
 	}()
@@ -163,19 +164,19 @@ func (c *NatsClient) on_request_handle() (err error) {
 				//订阅已关闭，需要重新订阅
 				c.subs, err = c.app.Transport().SubscribeSync(c.callbackqueueName)
 				if err != nil {
-					zap.L().Error("NatsClient SubscribeSync[1] error", zap.Error(err))
+					log.Error("NatsClient SubscribeSync[1] error", log.Err(err))
 					continue
 				}
 			}
 			continue
 		} else if err != nil {
 			fmt.Println(fmt.Sprintf("%v rpcclient error: %v", time.Now().String(), err.Error()))
-			zap.S().Errorf("NatsClient error with '%v'", err)
+			log.Errorf("NatsClient error with '%v'", err)
 			if !c.subs.IsValid() {
 				//订阅已关闭，需要重新订阅
 				c.subs, err = c.app.Transport().SubscribeSync(c.callbackqueueName)
 				if err != nil {
-					zap.L().Error("NatsClient SubscribeSync[2] fail", zap.Error(err))
+					log.Error("NatsClient SubscribeSync[2] fail", log.Err(err))
 					continue
 				}
 			}
@@ -184,7 +185,7 @@ func (c *NatsClient) on_request_handle() (err error) {
 
 		resultInfo, err := c.UnmarshalResult(m.Data)
 		if err != nil {
-			zap.L().Error("Unmarshal fail", zap.Error(err))
+			log.Error("Unmarshal fail", log.Err(err))
 		} else {
 			correlation_id := resultInfo.Cid
 			clinetCallInfo := c.callinfos.Get(correlation_id)
@@ -197,7 +198,7 @@ func (c *NatsClient) on_request_handle() (err error) {
 				}
 			} else {
 				//可能客户端已超时了，但服务端处理完还给回调了
-				zap.S().Warnf("rpc callback no found : [%s]", correlation_id)
+				log.Warnf("rpc callback no found : [%s]", correlation_id)
 			}
 		}
 	}

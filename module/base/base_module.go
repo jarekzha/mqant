@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/jarekzha/mqant/conf"
+	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	rpcpb "github.com/jarekzha/mqant/rpc/pb"
@@ -29,7 +30,6 @@ import (
 	"github.com/jarekzha/mqant/service"
 	mqanttools "github.com/jarekzha/mqant/utils"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 // BaseModule 默认的RPCModule实现
@@ -123,7 +123,7 @@ func (m *BaseModule) OnInit(subclass module.RPCModule, app module.App, settings 
 	server := server.NewServer(opt...)
 	err := server.OnInit(subclass, app, settings)
 	if err != nil {
-		zap.L().Warn("Server OnInit fail", zap.String("serverID", m.GetServerID()), zap.Error(err))
+		log.Warn("Server OnInit fail", log.String("serverID", m.GetServerID()), log.Err(err))
 	}
 	hostname, _ := os.Hostname()
 	server.Options().Metadata["hostname"] = hostname
@@ -141,7 +141,7 @@ func (m *BaseModule) OnInit(subclass module.RPCModule, app module.App, settings 
 	go func() {
 		err := m.service.Run()
 		if err != nil {
-			zap.L().Warn("service run fail", zap.String("serverID", m.GetServerID()), zap.Error(err))
+			log.Warn("service run fail", log.String("serverID", m.GetServerID()), log.Err(err))
 		}
 		close(m.serviceStopeds)
 	}()

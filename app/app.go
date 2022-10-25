@@ -40,7 +40,6 @@ import (
 	"github.com/jarekzha/mqant/selector/cache"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 type resultInfo struct {
@@ -84,7 +83,7 @@ func newOptions(opts ...module.Option) module.Options {
 	if opt.Nats == nil {
 		nc, err := nats.Connect(nats.DefaultURL)
 		if err != nil {
-			zap.L().DPanic("Nats connect fail", zap.Error(err))
+			log.DPanic("Nats connect fail", log.Err(err))
 		}
 		opt.Nats = nc
 	}
@@ -206,7 +205,7 @@ func (app *DefaultApp) Run(mods ...module.Module) error {
 		log.WithLogDir(app.opts.LogDir),
 		log.WithLogFileName(app.opts.LogFileName),
 		log.WithLogSetting(conf.Conf.Log))
-	zap.L().Info("Framework mqant starting up", zap.String("version", app.opts.Version))
+	log.Info("Framework mqant starting up", log.String("version", app.opts.Version))
 
 	manager := basemodule.NewModuleManager()
 	manager.RegisterRunMod(modules.TimerModule()) //注册时间轮模块 每一个进程都默认运行
@@ -220,12 +219,12 @@ func (app *DefaultApp) Run(mods ...module.Module) error {
 	if app.startup != nil {
 		app.startup(app)
 	}
-	zap.L().Info("Framework mqant started", zap.String("version", app.opts.Version))
+	log.Info("Framework mqant started", log.String("version", app.opts.Version))
 	// close
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	sig := <-c
-	zap.L().Sync()
+	log.Sync()
 	//如果一分钟都关不了则强制关闭
 	timeout := time.NewTimer(app.opts.KillWaitTTL)
 	wait := make(chan struct{})
@@ -236,11 +235,11 @@ func (app *DefaultApp) Run(mods ...module.Module) error {
 	}()
 	select {
 	case <-timeout.C:
-		zap.L().DPanic("mqant close timeout", zap.Any("singal", sig))
+		log.DPanic("mqant close timeout", log.Any("singal", sig))
 	case <-wait:
-		zap.L().Info("mqant closing down signal: %v", zap.Any("signal", sig))
+		log.Info("mqant closing down signal: %v", log.Any("signal", sig))
 	}
-	zap.L().Sync()
+	log.Sync()
 	return nil
 }
 
@@ -291,7 +290,7 @@ func (app *DefaultApp) Watcher(node *registry.Node) {
 	//把注销的服务ServerSession删除掉
 	session, ok := app.serverList.Load(node.ID)
 	if ok && session != nil {
-		zap.L().Info("Watcher delete node", zap.String("id", node.ID))
+		log.Info("Watcher delete node", log.String("id", node.ID))
 		session.(module.ServerSession).GetRPC().Done()
 		app.serverList.Delete(node.ID)
 	}
@@ -377,7 +376,7 @@ func (app *DefaultApp) GetServersByType(serviceName string) []module.ServerSessi
 	sessions := make([]module.ServerSession, 0)
 	services, err := app.opts.Selector.GetService(serviceName)
 	if err != nil {
-		zap.L().Warn("GetServersByType fail", zap.Error(err))
+		log.Warn("GetServersByType fail", log.Err(err))
 		return sessions
 	}
 	for _, service := range services {
@@ -387,7 +386,7 @@ func (app *DefaultApp) GetServersByType(serviceName string) []module.ServerSessi
 			if !ok {
 				s, err := basemodule.NewServerSession(app, serviceName, node)
 				if err != nil {
-					zap.L().Warn("NewServerSession fail", zap.Error(err))
+					log.Warn("NewServerSession fail", log.Err(err))
 				} else {
 					app.serverList.Store(node.ID, s)
 					sessions = append(sessions, s)

@@ -25,7 +25,6 @@ import (
 	"github.com/jarekzha/mqant/gate"
 	"github.com/jarekzha/mqant/log"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 type handler struct {
@@ -51,7 +50,7 @@ func (h *handler) Connect(a gate.Agent) {
 		if err := recover(); err != nil {
 			buff := make([]byte, 1024)
 			runtime.Stack(buff, false)
-			zap.L().Error("Handler connect panic", zap.Any("err", err), zap.ByteString("info", buff))
+			log.Error("Handler connect panic", log.Any("err", err), log.ByteString("info", buff))
 		}
 	}()
 	if a.GetSession() != nil {
@@ -76,7 +75,7 @@ func (h *handler) DisConnect(a gate.Agent) {
 		if err := recover(); err != nil {
 			buff := make([]byte, 1024)
 			runtime.Stack(buff, false)
-			zap.L().Error("Handler disconnect panic", zap.Any("err", err), zap.ByteString("info", buff))
+			log.Error("Handler disconnect panic", log.Any("err", err), log.ByteString("info", buff))
 		}
 		if a.GetSession() != nil {
 			h.sessions.Delete(a.GetSession().GetSessionID())
@@ -163,7 +162,7 @@ func (h *handler) Bind(span log.TraceSpan, Sessionid string, Userid string) (res
 				}
 			} else {
 				//解析持久化数据失败
-				zap.L().Warn("Sesssion Resolve fail", zap.Error(err))
+				log.Warn("Sesssion Resolve fail", log.Err(err))
 			}
 		}
 		//数据持久化
@@ -225,7 +224,7 @@ func (h *handler) Push(span log.TraceSpan, Sessionid string, Settings map[string
 	if h.gate.GetStorageHandler() != nil && agent.(gate.Agent).GetSession().GetUserID() != "" {
 		err := h.gate.GetStorageHandler().Storage(agent.(gate.Agent).GetSession())
 		if err != nil {
-			zap.L().Warn("gate session storage fail", zap.Error(err))
+			log.Warn("gate session storage fail", log.Err(err))
 		}
 	}
 
@@ -247,7 +246,7 @@ func (h *handler) Set(span log.TraceSpan, Sessionid string, key string, value st
 	if h.gate.GetStorageHandler() != nil && agent.(gate.Agent).GetSession().GetUserID() != "" {
 		err := h.gate.GetStorageHandler().Storage(agent.(gate.Agent).GetSession())
 		if err != nil {
-			zap.L().Error("Gate session storage fail", zap.Error(err))
+			log.Error("Gate session storage fail", log.Err(err))
 		}
 	}
 
@@ -269,7 +268,7 @@ func (h *handler) Remove(span log.TraceSpan, Sessionid string, key string) (resu
 	if h.gate.GetStorageHandler() != nil && agent.(gate.Agent).GetSession().GetUserID() != "" {
 		err := h.gate.GetStorageHandler().Storage(agent.(gate.Agent).GetSession())
 		if err != nil {
-			zap.L().Error("Gate session storage fail", zap.Error(err))
+			log.Error("Gate session storage fail", log.Err(err))
 		}
 	}
 
@@ -307,7 +306,7 @@ func (h *handler) SendBatch(span log.TraceSpan, SessionidStr string, topic strin
 		}
 		e := agent.(gate.Agent).WriteMsg(topic, body)
 		if e != nil {
-			zap.L().Warn("WriteMsg fail", zap.Error(e))
+			log.Warn("WriteMsg fail", log.Err(e))
 		} else {
 			count++
 		}
@@ -319,7 +318,7 @@ func (h *handler) BroadCast(span log.TraceSpan, topic string, body []byte) (int6
 	h.sessions.Range(func(key, agent interface{}) bool {
 		e := agent.(gate.Agent).WriteMsg(topic, body)
 		if e != nil {
-			zap.L().Warn("WriteMsg fail", zap.Error(e))
+			log.Warn("WriteMsg fail", log.Err(e))
 		} else {
 			count++
 		}

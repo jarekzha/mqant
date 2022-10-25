@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"io"
 
-	"go.uber.org/zap"
+	"github.com/jarekzha/mqant/log"
 )
 
 const (
@@ -602,7 +602,7 @@ func ReadPack(r *bufio.Reader, max_pack_length int) (pack *Pack, err error) {
 	// Pass, nothing to do.
 	default:
 		//将pack剩余中的数据读了
-		zap.L().Error("No find pack", zap.Int("type", int(pack.msg_type)), zap.Int("lengh", pack.length))
+		log.Error("No find pack", log.Int("type", int(pack.msg_type)), log.Int("lengh", pack.length))
 		if pack.length > 0 {
 			buf := make([]byte, pack.length)
 			_, err = io.ReadFull(r, buf)

@@ -6,12 +6,12 @@ import (
 	"sync"
 
 	"github.com/jarekzha/mqant/conf"
+	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	"github.com/jarekzha/mqant/registry"
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	defaultrpc "github.com/jarekzha/mqant/rpc/base"
 	"github.com/jarekzha/mqant/utils/lib/addr"
-	"go.uber.org/zap"
 )
 
 type rpcServer struct {
@@ -56,7 +56,7 @@ func (s *rpcServer) Init(opts ...Option) error {
 func (s *rpcServer) OnInit(module module.Module, app module.App, settings *conf.ModuleSettings) error {
 	server, err := defaultrpc.NewRPCServer(app, module) //默认会创建一个本地的RPC
 	if err != nil {
-		zap.L().Warn("NewRPCServer fail", zap.Error(err))
+		log.Warn("NewRPCServer fail", log.Err(err))
 	}
 	s.server = server
 	s.opts.Address = server.Addr()
@@ -140,7 +140,7 @@ func (s *rpcServer) ServiceRegister() error {
 	s.Unlock()
 
 	if !registered {
-		zap.S().Infof("Registering node %s", node.ID)
+		log.Infof("Registering node %s", node.ID)
 	}
 
 	// create registry options
@@ -202,7 +202,7 @@ func (s *rpcServer) ServiceDeregister() error {
 		Nodes:   []*registry.Node{node},
 	}
 
-	zap.S().Infof("Unregistering node: %s", node.ID)
+	log.Infof("Unregistering node: %s", node.ID)
 	if err := config.Registry.Deregister(service); err != nil {
 		return err
 	}
@@ -233,12 +233,12 @@ func (s *rpcServer) Start() error {
 
 func (s *rpcServer) Stop() error {
 	if s.server != nil {
-		zap.L().Info("RPCServer closeing", zap.String("ID", s.id))
+		log.Info("RPCServer closeing", log.String("ID", s.id))
 		err := s.server.Done()
 		if err != nil {
-			zap.L().Warn("RPCServer close fail", zap.Error(err), zap.String("ID", s.id))
+			log.Warn("RPCServer close fail", log.Err(err), log.String("ID", s.id))
 		} else {
-			zap.L().Info("RPCServer close success", zap.String("ID", s.id))
+			log.Info("RPCServer close success", log.String("ID", s.id))
 		}
 		s.server = nil
 	}

@@ -20,10 +20,10 @@ import (
 
 	"github.com/jarekzha/mqant/conf"
 	"github.com/jarekzha/mqant/gate"
+	"github.com/jarekzha/mqant/log"
 	"github.com/jarekzha/mqant/module"
 	basemodule "github.com/jarekzha/mqant/module/base"
 	"github.com/jarekzha/mqant/network"
-	"go.uber.org/zap"
 )
 
 var RPCParamSessionType = gate.RPCParamSessionType
@@ -167,7 +167,7 @@ func (gt *Gate) OnAppConfigurationLoaded(app module.App) {
 	gt.BaseModule.OnAppConfigurationLoaded(app) //这是必须的
 	err := app.AddRPCSerialize("gate", gt)
 	if err != nil {
-		zap.L().Warn("Adding session structures failed to serialize interfaces", zap.Error(err))
+		log.Warn("Adding session structures failed to serialize interfaces", log.Err(err))
 	}
 }
 func (gt *Gate) OnInit(subclass module.RPCModule, app module.App, settings *conf.ModuleSettings, opts ...gate.Option) {
