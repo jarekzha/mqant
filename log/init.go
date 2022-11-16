@@ -16,7 +16,7 @@ import (
 func Init(opts ...Option) {
 	options := NewOptions(opts...)
 
-	zapOptions := []zap.Option{}
+	zapOptions := []zap.Option{zap.AddCallerSkip(1)}
 
 	var config zap.Config
 	if options.Debug {
