@@ -50,7 +50,7 @@ type ModuleSettings struct {
 
 // Mqtt mqtt协议配置
 type Mqtt struct {
-	WirteLoopChanNum int `mqant:"WirteLoopChanNum"` // 最大写入包队列缓存 (1,+∞)
+	WriteLoopChanNum int `mqant:"WriteLoopChanNum"` // 最大写入包队列缓存 (1,+∞)
 	ReadPackLoop     int `mqant:"ReadPackLoop"`     // 最大读取包队列缓存
 	ReadTimeout      int `mqant:"ReadTimeout"`      // 读取超时
 	WriteTimeout     int `mqant:"WriteTimeout"`     // 写入超时
