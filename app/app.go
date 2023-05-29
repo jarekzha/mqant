@@ -237,7 +237,7 @@ func (app *DefaultApp) Run(mods ...module.Module) error {
 	case <-timeout.C:
 		log.DPanic("mqant close timeout", log.Any("singal", sig))
 	case <-wait:
-		log.Info("mqant closing down signal: %v", log.Any("signal", sig))
+		log.Info("mqant closing down", log.Any("signal", sig))
 	}
 	log.Sync()
 	return nil
