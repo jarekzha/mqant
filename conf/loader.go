@@ -42,12 +42,12 @@ func readFromFile(configFileUrl string) error {
 	switch extension {
 	case "json":
 		parser = json.Parser()
-	case "yaml":
+	case "yaml", "yml":
 		parser = yaml.Parser()
 	case "toml":
 		parser = toml.Parser()
 	default:
-		log.Fatalf("loading config %s invalid file exension, support [json, yaml, toml]", configFileUrl)
+		log.Fatalf("loading config %s invalid file exension, support [json, yaml, yml, toml]", configFileUrl)
 	}
 
 	if e := k.Load(file.Provider(configFileUrl), parser); e != nil {
