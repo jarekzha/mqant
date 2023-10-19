@@ -25,7 +25,7 @@ var (
 type Config struct {
 	Log      map[string]interface{}       `mqant:"Log"`
 	RPC      RPC                          `mqant:"RPC"`
-	Module   map[string][]*ModuleSettings `mqant:"Module"`
+	Module   map[string][]*ModuleSettings `mqant:"M"`
 	Mqtt     Mqtt                         `mqant:"Mqtt"`
 	Settings map[string]interface{}       `mqant:"Settings"`
 }
