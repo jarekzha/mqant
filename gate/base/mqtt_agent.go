@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"runtime"
 	"strings"
 	"sync"
@@ -140,6 +141,10 @@ func (age *agent) Run() (err error) {
 	var pack *mqtt.Pack
 	pack, err = mqtt.ReadPack(age.r, age.gate.Options().MaxPackSize)
 	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return
+		}
+
 		log.Error("Read login pack fail", log.Err(err))
 		return
 	}
