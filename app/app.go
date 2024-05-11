@@ -439,7 +439,7 @@ func (app *DefaultApp) Invoke(module module.RPCModule, moduleType string, _func 
 		err = e
 		return
 	}
-	return server.Call(context.TODO(), _func, params...)
+	return server.Call(nil, _func, params...)
 }
 
 // InvokeNR InvokeNR
