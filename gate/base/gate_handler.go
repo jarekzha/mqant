@@ -341,6 +341,6 @@ func (h *handler) Close(span log.TraceSpan, Sessionid string) (result interface{
 }
 
 // 遍历所有的Agent
-func (h *handler) WalkAgent(f func(sessionID, agent any) bool) {
+func (h *handler) WalkAgent(f func(sessionID, agent interface{}) bool) {
 	h.sessions.Range(f)
 }
