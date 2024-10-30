@@ -22,6 +22,10 @@ func UserID(userID string) zap.Field {
 	return zap.String("userID", userID)
 }
 
+func SID(sid int32) zap.Field {
+	return zap.Int32("sid", sid)
+}
+
 func Skip() zap.Field {
 	return zap.Skip()
 }
