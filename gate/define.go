@@ -47,6 +47,7 @@ type GateHandler interface {
 	IsConnect(span log.TraceSpan, Sessionid string, Userid string) (result bool, err string)
 	Close(span log.TraceSpan, Sessionid string) (result interface{}, err string) //主动关闭连接
 	Update(span log.TraceSpan, Sessionid string) (result Session, err string)    //更新整个Session 通常是其他模块拉取最新数据
+	WalkAgent(f func(sessionID, agent any) bool)                                 //遍历所有agent
 	OnDestroy()                                                                  //退出事件,主动关闭所有的连接
 }
 
