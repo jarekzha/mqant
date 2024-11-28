@@ -3,7 +3,6 @@ module github.com/jarekzha/mqant
 go 1.12
 
 require (
-	github.com/armon/go-metrics v0.5.1 // indirect
 	github.com/coreos/bbolt v1.3.3 // indirect
 	github.com/coreos/etcd v3.3.15+incompatible // indirect
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f // indirect
@@ -42,5 +41,3 @@ require (
 )
 
 replace google.golang.org/grpc => google.golang.org/grpc v1.29.1
-
-replace github.com/armon/go-metrics => github.com/hashicorp/go-metrics v0.4.1
