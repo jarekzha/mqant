@@ -161,28 +161,28 @@ func (c *RPCClient) CallNRArgs(_func string, ArgsType []string, args [][]byte) (
 func (c *RPCClient) Call(ctx context.Context, _func string, params ...interface{}) (interface{}, error) {
 	var ArgsType []string = make([]string, len(params))
 	var args [][]byte = make([][]byte, len(params))
-	var span log.TraceSpan = nil
+	//var span log.TraceSpan = nil
 	for k, param := range params {
 		var err error = nil
 		ArgsType[k], args[k], err = argsutil.ArgsTypeAnd2Bytes(c.app, param)
 		if err != nil {
 			return nil, fmt.Errorf("args[%d] error %s", k, err.Error())
 		}
-		switch v2 := param.(type) { //多选语句switch
-		case log.TraceSpan:
-			//如果参数是这个需要拷贝一份新的再传
-			span = v2
-		}
+		//switch v2 := param.(type) { //多选语句switch
+		//case log.TraceSpan:
+		//	//如果参数是这个需要拷贝一份新的再传
+		//	span = v2
+		//}
 	}
 	start := time.Now()
 	r, err := c.CallArgs(ctx, _func, ArgsType, args)
 	if c.app.GetSettings().RPC.Log {
 		log.Info("RPC Call",
-			log.Span(span),
+			//log.Span(span),
 			log.String("serverID", c.nats_client.session.GetID()),
 			log.String("func", _func),
 			log.Duration("elapsed", time.Since(start)),
-			log.Any("result", r),
+			//log.Any("result", r),
 			log.Err(err))
 	}
 	return r, err
@@ -195,23 +195,23 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...interface{
 func (c *RPCClient) CallNR(_func string, params ...interface{}) (err error) {
 	var ArgsType []string = make([]string, len(params))
 	var args [][]byte = make([][]byte, len(params))
-	var span log.TraceSpan = nil
+	//var span log.TraceSpan = nil
 	for k, param := range params {
 		ArgsType[k], args[k], err = argsutil.ArgsTypeAnd2Bytes(c.app, param)
 		if err != nil {
 			return fmt.Errorf("args[%d] error %s", k, err.Error())
 		}
 
-		switch v2 := param.(type) { //多选语句switch
-		case log.TraceSpan:
-			span = v2
-		}
+		//switch v2 := param.(type) { //多选语句switch
+		//case log.TraceSpan:
+		//	span = v2
+		//}
 	}
 	start := time.Now()
 	err = c.CallNRArgs(_func, ArgsType, args)
 	if c.app.GetSettings().RPC.Log {
 		log.Info("RPC CallNR",
-			log.Span(span),
+			//log.Span(span),
 			log.String("serverID", c.nats_client.session.GetID()),
 			log.String("func", _func),
 			log.Duration("elapsed", time.Since(start)),

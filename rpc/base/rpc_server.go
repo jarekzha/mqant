@@ -162,7 +162,7 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 		//需要回复的才回复
 		err := callInfo.Agent.(mqrpc.MQServer).Callback(callInfo)
 		if err != nil {
-			log.Warn("rpc callback err", log.Err(err))
+			log.Warn("rpc callback err", log.String("func", callInfo.RPCInfo.Fn), log.Err(err))
 		}
 
 		//if callInfo.RPCInfo.Expired < (time.Now().UnixNano() / 1000000) {
@@ -177,7 +177,7 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 	} else {
 		//对于不需要回复的消息,可以判断一下是否出现错误，打印一些警告
 		if callInfo.Result.Error != "" {
-			log.Warn("rpc callback err", log.String("error", callInfo.Result.Error))
+			log.Warn("rpc callback err", log.String("func", callInfo.RPCInfo.Fn), log.String("error", callInfo.Result.Error))
 		}
 	}
 	if s.app.Options().ServerRPCHandler != nil {
@@ -378,7 +378,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	callInfo.ExecTime = time.Since(start).Nanoseconds()
 	s.doCallback(callInfo)
 	if s.app.GetSettings().RPC.Log {
-		log.Info("RPC Exec ModuleType = %v Func = %v Elapsed = %v",
+		log.Info("RPC Exec",
 			log.String("moduleType", s.module.GetType()),
 			log.String("func", callInfo.RPCInfo.Fn),
 			log.Duration("elapsed", time.Since(start)))
