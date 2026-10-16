@@ -253,24 +253,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 				elemp = reflect.New(rv)
 			}
 
-			if pb, ok := elemp.Interface().(mqrpc.Marshaler); ok {
-				err := pb.Unmarshal(params[k])
-				if err != nil {
-					s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, err.Error())
-					return
-				}
-				if pb == nil { //多选语句switch
-					in[k] = reflect.Zero(rv)
-				}
-				if rv.Kind() == reflect.Ptr {
-					//接收指针变量的参数
-					in[k] = reflect.ValueOf(elemp.Interface())
-				} else {
-					//接收值变量
-					in[k] = elemp.Elem()
-				}
-				input[k] = pb
-			} else if pb, ok := elemp.Interface().(proto.Message); ok {
+			if pb, ok := elemp.Interface().(proto.Message); ok {
 				err := proto.Unmarshal(params[k], pb)
 				if err != nil {
 					s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, err.Error())
@@ -287,8 +270,25 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 					in[k] = elemp.Elem()
 				}
 				input[k] = pb
+			} else if pb, ok := elemp.Interface().(mqrpc.Marshaler); ok {
+				err := pb.Unmarshal(params[k])
+				if err != nil {
+					s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, err.Error())
+					return
+				}
+				if pb == nil { //多选语句switch
+					in[k] = reflect.Zero(rv)
+				}
+				if rv.Kind() == reflect.Ptr {
+					//接收指针变量的参数
+					in[k] = reflect.ValueOf(elemp.Interface())
+				} else {
+					//接收值变量
+					in[k] = elemp.Elem()
+				}
+				input[k] = pb
 			} else {
-				//不是Marshaler 才尝试用 argsutil 解析
+				//非 protobuf 消息和 Marshaler 才尝试用 argsutil 解析
 				ty, err := argsutil.Bytes2Args(s.app, v, params[k])
 				if err != nil {
 					s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, err.Error())

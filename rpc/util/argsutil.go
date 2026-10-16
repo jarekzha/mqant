@@ -109,17 +109,6 @@ func ArgsTypeAnd2Bytes(app module.App, arg interface{}) (string, []byte, error) 
 				//如果是nil则直接返回
 				return NULL, nil, nil
 			}
-			if v2, ok := arg.(mqrpc.Marshaler); ok {
-				b, err := v2.Marshal()
-				if err != nil {
-					return "", nil, fmt.Errorf("args [%s] marshal error %v", reflect.TypeOf(arg), err)
-				}
-				if v2.String() != "" {
-					return fmt.Sprintf("%v@%v", Marshal, v2.String()), b, nil
-				} else {
-					return fmt.Sprintf("%v@%v", Marshal, reflect.TypeOf(arg)), b, nil
-				}
-			}
 			if v2, ok := arg.(proto.Message); ok {
 				b, err := proto.Marshal(v2)
 				if err != nil {
@@ -127,6 +116,13 @@ func ArgsTypeAnd2Bytes(app module.App, arg interface{}) (string, []byte, error) 
 					return "", nil, fmt.Errorf("args [%s] proto.Marshal error %v", reflect.TypeOf(arg), err)
 				}
 				return fmt.Sprintf("%v@%v", Proto, reflect.TypeOf(arg)), b, nil
+			}
+			if v2, ok := arg.(mqrpc.Marshaler); ok {
+				b, err := v2.Marshal()
+				if err != nil {
+					return "", nil, fmt.Errorf("args [%s] marshal error %v", reflect.TypeOf(arg), err)
+				}
+				return fmt.Sprintf("%v@%v", Marshal, reflect.TypeOf(arg)), b, nil
 			}
 		}
 
