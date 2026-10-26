@@ -64,6 +64,11 @@ func NewNatsServer(app module.App, s *RPCServer) (*NatsServer, error) {
 	server.isClose = false
 	server.app = app
 	server.addr = nats.NewInbox()
+	var err error
+	server.subs, err = subscribeNatsReady(app.Transport(), server.addr)
+	if err != nil {
+		return nil, fmt.Errorf("initialize RPC request subscription: %v", err)
+	}
 	go func() {
 		server.on_request_handle()
 		safeClose(server.stopeds)
@@ -129,11 +134,6 @@ func (s *NatsServer) on_request_handle() (err error) {
 			fmt.Println(errstr)
 		}
 	}()
-	s.subs, err = s.app.Transport().SubscribeSync(s.addr)
-	if err != nil {
-		return err
-	}
-
 	go func() {
 		select {
 		case <-s.done:

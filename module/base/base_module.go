@@ -123,7 +123,8 @@ func (m *BaseModule) OnInit(subclass module.RPCModule, app module.App, settings 
 	server := server.NewServer(opt...)
 	err := server.OnInit(subclass, app, settings)
 	if err != nil {
-		log.Warn("Server OnInit fail", log.String("serverID", m.GetServerID()), log.Err(err))
+		options := server.Options()
+		log.Panic("Server OnInit fail", log.String("serverID", options.Name+"@"+options.ID), log.Err(err))
 	}
 	hostname, _ := os.Hostname()
 	server.Options().Metadata["hostname"] = hostname

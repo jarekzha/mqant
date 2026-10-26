@@ -49,6 +49,10 @@ func NewNatsClient(app module.App, session module.ServerSession) (client *NatsCl
 	client.callbackqueueName = nats.NewInbox()
 	client.done = make(chan error)
 	client.isClose = false
+	client.subs, err = subscribeNatsReady(app.Transport(), client.callbackqueueName)
+	if err != nil {
+		return nil, fmt.Errorf("initialize RPC reply subscription: %v", err)
+	}
 	go client.on_request_handle()
 	return client, nil
 }
@@ -145,11 +149,6 @@ func (c *NatsClient) on_request_handle() (err error) {
 			fmt.Println(errstr)
 		}
 	}()
-	c.subs, err = c.app.Transport().SubscribeSync(c.callbackqueueName)
-	if err != nil {
-		return err
-	}
-
 	go func() {
 		<-c.done
 		c.subs.Unsubscribe()
