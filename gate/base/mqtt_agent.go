@@ -185,9 +185,9 @@ func (age *agent) Run() (err error) {
 	age.connTime = time.Now()
 	age.protocol_ok = true
 	age.gate.GetAgentLearner().Connect(age) //发送连接成功的事件
-	c.Listen_loop() //开始监听,直到连接中断
+	c.Listen_loop()                         //开始监听,直到连接中断
 	if closeErr := c.GetError(); closeErr != nil && !errors.Is(closeErr, io.EOF) {
-		log.Warn("MQTT connection closed on error",
+		log.Info("MQTT connection closed on error",
 			log.Err(closeErr),
 			log.String("session", age.session.GetSessionID()),
 			log.UserID(age.session.GetUserID()),
