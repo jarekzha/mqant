@@ -54,6 +54,7 @@ func NewRPCServer(app module.App, module module.Module) (mqrpc.RPCServer, error)
 	nats_server, err := NewNatsServer(app, rpc_server)
 	if err != nil {
 		log.Error("AMQPServer dial fail", log.Err(err))
+		return nil, err
 	}
 	rpc_server.nats_server = nats_server
 

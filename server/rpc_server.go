@@ -57,6 +57,7 @@ func (s *rpcServer) OnInit(module module.Module, app module.App, settings *conf.
 	server, err := defaultrpc.NewRPCServer(app, module) //默认会创建一个本地的RPC
 	if err != nil {
 		log.Warn("NewRPCServer fail", log.Err(err))
+		return err
 	}
 	s.server = server
 	s.opts.Address = server.Addr()
