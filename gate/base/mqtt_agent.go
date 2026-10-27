@@ -164,11 +164,12 @@ func (age *agent) Run() (err error) {
 	age.client = c
 	addr := age.conn.RemoteAddr()
 	age.session, err = NewSessionByMap(age.module.GetApp(), map[string]interface{}{
-		"Sessionid": mqanttools.GenerateID().String(),
-		"Network":   addr.Network(),
-		"IP":        addr.String(),
-		"Serverid":  age.module.GetServerID(),
-		"Settings":  make(map[string]string),
+		"Sessionid":      mqanttools.GenerateID().String(),
+		"Network":        addr.Network(),
+		"IP":             addr.String(),
+		"Serverid":       age.module.GetServerID(),
+		"GateInstanceID": age.module.GetInstanceID(),
+		"Settings":       make(map[string]string),
 	})
 	if err != nil {
 		log.Error("gate create agent fail", log.Err(err))

@@ -59,7 +59,8 @@ type Session interface {
 	GetUserID() string
 	GetUserIDInt64() int64
 	GetSessionID() string
-	GetServerID() string
+	GetServerID() string       // Gate 的逻辑模块 ID
+	GetGateInstanceID() string // 会话实际所属的 Gate 实例
 	//SettingsRange 配合一个回调函数进行遍历操作，通过回调函数返回内部遍历出来的值。Range 参数中的回调函数的返回值功能是：需要继续迭代遍历时，返回 true；终止迭代遍历时，返回 false。
 	SettingsRange(func(k, v string) bool)
 	// 合并两个map 并且以 agent.(Agent).GetSession().Settings 已有的优先
@@ -72,6 +73,7 @@ type Session interface {
 	SetUserID(userid string)
 	SetSessionID(sessionid string)
 	SetServerID(serverid string)
+	SetGateInstanceID(instanceID string)
 	SetSettings(settings map[string]string)
 	//CloneSettings
 	CloneSettings() map[string]string
