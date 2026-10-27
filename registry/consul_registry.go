@@ -14,6 +14,9 @@ import (
 	hash "github.com/mitchellh/hashstructure"
 )
 
+// consulServerIDKey transports the typed Node.ServerID through Consul.
+const consulServerIDKey = "server_id"
+
 type consulRegistry struct {
 	Address string
 	Client  *consul.Client
@@ -137,11 +140,11 @@ func (c *consulRegistry) Deregister(s *Service) error {
 
 	// delete our hash of the service
 	c.Lock()
-	delete(c.register, s.Name)
+	delete(c.register, s.Nodes[0].InstanceID)
 	c.Unlock()
 
 	node := s.Nodes[0]
-	return c.Client.Agent().ServiceDeregister(node.ID)
+	return c.Client.Agent().ServiceDeregister(node.InstanceID)
 }
 
 func (c *consulRegistry) Register(s *Service, opts ...RegisterOption) error {
@@ -175,14 +178,14 @@ func (c *consulRegistry) Register(s *Service, opts ...RegisterOption) error {
 
 	// get existing hash
 	c.Lock()
-	v, ok := c.register[s.Name]
+	v, ok := c.register[node.InstanceID]
 	c.Unlock()
 
 	// if it's already registered and matches then just pass the check
 	if ok && v == h {
 		// if the err is nil we're all good, bail out
 		// if not, we don't know what the state is, so full re-register
-		if err := c.Client.Agent().PassTTL("service:"+node.ID, ""); err == nil {
+		if err := c.Client.Agent().PassTTL("service:"+node.InstanceID, ""); err == nil {
 			return nil
 		}
 	}
@@ -215,7 +218,8 @@ func (c *consulRegistry) Register(s *Service, opts ...RegisterOption) error {
 
 	// register the service
 	asr := &consul.AgentServiceRegistration{
-		ID:      node.ID,
+		ID:      node.InstanceID,
+		Meta:    map[string]string{consulServerIDKey: node.ServerID},
 		Name:    s.Name,
 		Tags:    tags,
 		Port:    node.Port,
@@ -236,7 +240,7 @@ func (c *consulRegistry) Register(s *Service, opts ...RegisterOption) error {
 
 	// save our hash of the service
 	c.Lock()
-	c.register[s.Name] = h
+	c.register[node.InstanceID] = h
 	c.Unlock()
 
 	// if the TTL is 0 we don't mess with the checks
@@ -245,7 +249,7 @@ func (c *consulRegistry) Register(s *Service, opts ...RegisterOption) error {
 	}
 
 	// pass the healthcheck
-	return c.Client.Agent().PassTTL("service:"+node.ID, "")
+	return c.Client.Agent().PassTTL("service:"+node.InstanceID, "")
 }
 
 func (c *consulRegistry) GetService(name string) ([]*Service, error) {
@@ -310,10 +314,11 @@ func (c *consulRegistry) GetService(name string) ([]*Service, error) {
 		}
 
 		svc.Nodes = append(svc.Nodes, &Node{
-			ID:       id,
-			Address:  address,
-			Port:     s.Service.Port,
-			Metadata: decodeMetadata(s.Service.Tags),
+			InstanceID: id,
+			ServerID:   s.Service.Meta[consulServerIDKey],
+			Address:    address,
+			Port:       s.Service.Port,
+			Metadata:   decodeMetadata(s.Service.Tags),
 		})
 	}
 

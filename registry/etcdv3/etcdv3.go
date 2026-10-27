@@ -129,7 +129,7 @@ func (e *etcdv3Registry) Deregister(s *registry.Service) error {
 	defer cancel()
 
 	for _, node := range s.Nodes {
-		_, err := e.client.Delete(ctx, nodePath(s.Name, node.ID))
+		_, err := e.client.Delete(ctx, nodePath(s.Name, node.InstanceID))
 		if err != nil {
 			return err
 		}
@@ -198,9 +198,9 @@ func (e *etcdv3Registry) Register(s *registry.Service, opts ...registry.Register
 	for _, node := range s.Nodes {
 		service.Nodes = []*registry.Node{node}
 		if lgr != nil {
-			_, err = e.client.Put(ctx, nodePath(service.Name, node.ID), encode(service), clientv3.WithLease(lgr.ID))
+			_, err = e.client.Put(ctx, nodePath(service.Name, node.InstanceID), encode(service), clientv3.WithLease(lgr.ID))
 		} else {
-			_, err = e.client.Put(ctx, nodePath(service.Name, node.ID), encode(service))
+			_, err = e.client.Put(ctx, nodePath(service.Name, node.InstanceID), encode(service))
 		}
 		if err != nil {
 			return err

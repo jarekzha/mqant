@@ -16,14 +16,14 @@ var (
 				Version: "1.0.0",
 				Nodes: []*registry.Node{
 					{
-						ID:      "foo-1.0.0-123",
-						Address: "localhost",
-						Port:    9999,
+						InstanceID: "foo-1.0.0-123",
+						Address:    "localhost",
+						Port:       9999,
 					},
 					{
-						ID:      "foo-1.0.0-321",
-						Address: "localhost",
-						Port:    9999,
+						InstanceID: "foo-1.0.0-321",
+						Address:    "localhost",
+						Port:       9999,
 					},
 				},
 			},
@@ -32,9 +32,9 @@ var (
 				Version: "1.0.1",
 				Nodes: []*registry.Node{
 					{
-						ID:      "foo-1.0.1-321",
-						Address: "localhost",
-						Port:    6666,
+						InstanceID: "foo-1.0.1-321",
+						Address:    "localhost",
+						Port:       6666,
 					},
 				},
 			},
@@ -43,9 +43,9 @@ var (
 				Version: "1.0.3",
 				Nodes: []*registry.Node{
 					{
-						ID:      "foo-1.0.3-345",
-						Address: "localhost",
-						Port:    8888,
+						InstanceID: "foo-1.0.3-345",
+						Address:    "localhost",
+						Port:       8888,
 					},
 				},
 			},

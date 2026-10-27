@@ -162,6 +162,13 @@ func (c *cacheSelector) update(res *registry.Result) {
 	if len(res.Service.Nodes) == 0 {
 		switch res.Action {
 		case "delete":
+			for _, current := range services {
+				if c.so.Watcher != nil {
+					for _, node := range current.Nodes {
+						c.so.Watcher(node)
+					}
+				}
+			}
 			c.del(res.Service.Name)
 		}
 		return
@@ -188,7 +195,7 @@ func (c *cacheSelector) update(res *registry.Result) {
 		for _, cur := range service.Nodes {
 			var seen bool
 			for _, node := range res.Service.Nodes {
-				if cur.ID == node.ID {
+				if cur.InstanceID == node.InstanceID {
 					seen = true
 					break
 				}
@@ -210,7 +217,7 @@ func (c *cacheSelector) update(res *registry.Result) {
 		for _, cur := range service.Nodes {
 			var seen bool
 			for _, del := range res.Service.Nodes {
-				if del.ID == cur.ID {
+				if del.InstanceID == cur.InstanceID {
 					seen = true
 					break
 				}

@@ -176,9 +176,11 @@ func NewApp(opts ...module.Option) module.App {
 // DefaultApp 默认应用
 type DefaultApp struct {
 	//module.App
-	settings   conf.Config
-	serverList sync.Map
-	opts       module.Options
+	settings      conf.Config
+	serverList    sync.Map // InstanceID -> ServerSession，实例代理创建后不再替换节点
+	logicalRoutes sync.Map // ServerID -> InstanceID，沿用首次选中的存活实例
+	serverListMu  sync.Mutex
+	opts          module.Options
 	//将一个RPC调用路由到新的路由上
 	mapRoute            func(app module.App, route string) string
 	rpcserializes       map[string]module.RPCSerialize
@@ -288,11 +290,21 @@ func (app *DefaultApp) GetRPCSerialize() map[string]module.RPCSerialize {
 // Watcher Watcher
 func (app *DefaultApp) Watcher(node *registry.Node) {
 	//把注销的服务ServerSession删除掉
-	session, ok := app.serverList.Load(node.ID)
+	app.serverListMu.Lock()
+	session, ok := app.serverList.Load(node.InstanceID)
 	if ok && session != nil {
-		log.Info("Watcher delete node", log.String("id", node.ID))
-		session.(module.ServerSession).GetRPC().Done()
-		app.serverList.Delete(node.ID)
+		target := session.(module.ServerSession)
+		app.serverList.Delete(node.InstanceID)
+		serverID := target.GetID()
+		if instanceID, exists := app.logicalRoutes.Load(serverID); exists &&
+			instanceID.(string) == node.InstanceID {
+			app.logicalRoutes.Delete(serverID)
+		}
+	}
+	app.serverListMu.Unlock()
+	if ok && session != nil {
+		log.Info("Watcher delete node", log.String("id", node.InstanceID))
+		_ = session.(module.ServerSession).GetRPC().Done()
 	}
 }
 
@@ -326,25 +338,83 @@ func (app *DefaultApp) OnDestroy() error {
 
 // GetServerByID 通过服务ID获取服务实例
 func (app *DefaultApp) GetServerByID(serverID string) (module.ServerSession, error) {
-	session, ok := app.serverList.Load(serverID)
-	if !ok {
-		serviceName := serverID
-		s := strings.Split(serverID, "@")
-		if len(s) == 2 {
-			serviceName = s[0]
-		} else {
-			return nil, errors.Errorf("serverID is error %v", serverID)
+	app.serverListMu.Lock()
+	if instanceID, ok := app.logicalRoutes.Load(serverID); ok {
+		if session, exists := app.serverList.Load(instanceID.(string)); exists {
+			app.serverListMu.Unlock()
+			return session.(module.ServerSession), nil
 		}
-		sessions := app.GetServersByType(serviceName)
-		for _, s := range sessions {
-			if s.GetNode().ID == serverID {
-				return s, nil
+	}
+	app.serverListMu.Unlock()
+
+	parts := strings.Split(serverID, "@")
+	if len(parts) != 2 {
+		return nil, errors.Errorf("serverID is error %v", serverID)
+	}
+	for _, candidate := range app.GetServersByType(parts[0]) {
+		if candidate.GetID() != serverID {
+			continue
+		}
+		app.serverListMu.Lock()
+		if instanceID, ok := app.logicalRoutes.Load(serverID); ok {
+			if session, exists := app.serverList.Load(instanceID.(string)); exists {
+				app.serverListMu.Unlock()
+				return session.(module.ServerSession), nil
 			}
 		}
-	} else {
-		return session.(module.ServerSession), nil
+		// 发现之后实例可能已被删除，不为已失效的代理建立路由。
+		_, alive := app.serverList.Load(candidate.GetInstanceID())
+		if alive {
+			app.logicalRoutes.Store(serverID, candidate.GetInstanceID())
+		}
+		app.serverListMu.Unlock()
+		if alive {
+			return candidate, nil
+		}
 	}
 	return nil, errors.Errorf("nofound %v", serverID)
+}
+
+// GetServerByInstanceID 只查找指定实例，不回退到同名逻辑模块的其他实例。
+func (app *DefaultApp) GetServerByInstanceID(instanceID string) (module.ServerSession, error) {
+	if session, ok := app.serverList.Load(instanceID); ok {
+		return session.(module.ServerSession), nil
+	}
+	parts := strings.Split(instanceID, "@")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return nil, errors.Errorf("instanceID is error %v", instanceID)
+	}
+	services, err := app.opts.Selector.GetService(parts[0])
+	if err != nil {
+		return nil, err
+	}
+	for _, service := range services {
+		for _, node := range service.Nodes {
+			if node.InstanceID == instanceID {
+				return app.getServerSession(parts[0], node)
+			}
+		}
+	}
+	return nil, errors.Errorf("nofound instance %v", instanceID)
+}
+
+// getServerSession 按实例缓存代理；并发发现同一实例时只保留一份 RPC 客户端。
+func (app *DefaultApp) getServerSession(serviceName string, node *registry.Node) (module.ServerSession, error) {
+	if cached, ok := app.serverList.Load(node.InstanceID); ok {
+		return cached.(module.ServerSession), nil
+	}
+	session, err := basemodule.NewServerSession(app, serviceName, node)
+	if err != nil {
+		return nil, err
+	}
+	app.serverListMu.Lock()
+	cached, loaded := app.serverList.LoadOrStore(node.InstanceID, session)
+	app.serverListMu.Unlock()
+	if loaded {
+		_ = session.GetRPC().Done()
+		return cached.(module.ServerSession), nil
+	}
+	return session, nil
 }
 
 // GetServerBySelector 获取服务实例,可设置选择器
@@ -357,18 +427,7 @@ func (app *DefaultApp) GetServerBySelector(serviceName string, opts ...selector.
 	if err != nil {
 		return nil, err
 	}
-	session, ok := app.serverList.Load(node.ID)
-	if !ok {
-		s, err := basemodule.NewServerSession(app, serviceName, node)
-		if err != nil {
-			return nil, err
-		}
-		app.serverList.Store(node.ID, s)
-		return s, nil
-	}
-	session.(module.ServerSession).SetNode(node)
-	return session.(module.ServerSession), nil
-
+	return app.getServerSession(serviceName, node)
 }
 
 // GetServersByType 通过服务类型获取服务实例列表
@@ -382,18 +441,11 @@ func (app *DefaultApp) GetServersByType(serviceName string) []module.ServerSessi
 	for _, service := range services {
 		//log.TInfo(nil,"GetServersByType3 %v %v",Type,service.Nodes)
 		for _, node := range service.Nodes {
-			session, ok := app.serverList.Load(node.ID)
-			if !ok {
-				s, err := basemodule.NewServerSession(app, serviceName, node)
-				if err != nil {
-					log.Warn("NewServerSession fail", log.Err(err))
-				} else {
-					app.serverList.Store(node.ID, s)
-					sessions = append(sessions, s)
-				}
+			session, err := app.getServerSession(serviceName, node)
+			if err != nil {
+				log.Warn("NewServerSession fail", log.Err(err))
 			} else {
-				session.(module.ServerSession).SetNode(node)
-				sessions = append(sessions, session.(module.ServerSession))
+				sessions = append(sessions, session)
 			}
 		}
 	}

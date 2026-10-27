@@ -31,11 +31,34 @@ func TestRPCServerInstanceIdentity(t *testing.T) {
 				t.Fatal("registration or renewal changed instance ID")
 			}
 		}
-		if err := srv.ServiceDeregister(); err != nil {
-			t.Fatal(err)
+	}
+	services, err := reg.GetService("Gate")
+	if err != nil || len(services) != 1 || len(services[0].Nodes) != 2 {
+		t.Fatalf("same logical ID should register two instances: %v, %v", services, err)
+	}
+	seen := map[string]bool{}
+	for _, node := range services[0].Nodes {
+		seen[node.InstanceID] = true
+		if node.ServerID != "Gate@Gate001" {
+			t.Fatalf("logical ID missing from registration: %v", node.Metadata)
 		}
-		if srv.InstanceID() != instanceID {
-			t.Fatal("deregistration changed instance ID")
-		}
+	}
+	if !seen[first.InstanceID()] || !seen[second.InstanceID()] {
+		t.Fatal("registration IDs must be the instance IDs")
+	}
+	instanceID := first.InstanceID()
+	if err := first.ServiceDeregister(); err != nil {
+		t.Fatal(err)
+	}
+	if first.InstanceID() != instanceID {
+		t.Fatal("deregistration changed instance ID")
+	}
+	services, err = reg.GetService("Gate")
+	if err != nil || len(services) != 1 || len(services[0].Nodes) != 1 ||
+		services[0].Nodes[0].InstanceID != second.InstanceID() {
+		t.Fatalf("old instance removed the new registration: %v, %v", services, err)
+	}
+	if err := second.ServiceDeregister(); err != nil {
+		t.Fatal(err)
 	}
 }

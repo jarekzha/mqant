@@ -32,12 +32,12 @@ type ProtocolMarshal interface {
 
 // ServerSession 服务代理
 type ServerSession interface {
-	GetID() string
+	GetID() string         // 配置对应的逻辑模块 ID
+	GetInstanceID() string // 该代理指向的实例注册 ID
 	GetName() string
 	GetRPC() mqrpc.RPCClient
 	GetApp() App
 	GetNode() *registry.Node
-	SetNode(node *registry.Node) (err error)
 	Call(ctx context.Context, _func string, params ...interface{}) (interface{}, error)
 	CallNR(_func string, params ...interface{}) (err error)
 	CallArgs(ctx context.Context, _func string, ArgsType []string, args [][]byte) (interface{}, error)
@@ -56,6 +56,7 @@ type App interface {
 	Transport() *nats.Conn
 	Registry() registry.Registry
 	GetServerByID(id string) (ServerSession, error)
+	GetServerByInstanceID(instanceID string) (ServerSession, error)
 	/**
 	filter		 调用者服务类型    moduleType|moduleType@moduleID
 	Type	   	想要调用的服务类型

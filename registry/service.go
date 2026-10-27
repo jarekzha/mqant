@@ -11,10 +11,11 @@ type Service struct {
 
 // Node 服务节点信息
 type Node struct {
-	ID       string            `json:"id"`
-	Address  string            `json:"address"`
-	Port     int               `json:"port"`
-	Metadata map[string]string `json:"metadata"`
+	ServerID   string            `json:"server_id"`   // 配置对应的逻辑 ID
+	InstanceID string            `json:"instance_id"` // 每次启动唯一的实例 ID
+	Address    string            `json:"address"`
+	Port       int               `json:"port"`
+	Metadata   map[string]string `json:"metadata"`
 }
 
 // Endpoint 服务节点信息

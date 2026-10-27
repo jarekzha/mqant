@@ -47,7 +47,11 @@ type serverSession struct {
 }
 
 func (c *serverSession) GetID() string {
-	return c.node.ID
+	return c.node.ServerID
+}
+
+func (c *serverSession) GetInstanceID() string {
+	return c.node.InstanceID
 }
 
 func (c *serverSession) GetName() string {
@@ -62,11 +66,6 @@ func (c *serverSession) GetApp() module.App {
 }
 func (c *serverSession) GetNode() *registry.Node {
 	return c.node
-}
-
-func (c *serverSession) SetNode(node *registry.Node) (err error) {
-	c.node = node
-	return
 }
 
 /*

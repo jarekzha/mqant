@@ -22,6 +22,18 @@ func TestHealthyServiceHandler(t *testing.T) {
 	}
 }
 
+func TestWatcherPreservesTypedNodeIdentity(t *testing.T) {
+	watcher := newWatcher()
+	entry := newServiceEntry("node", "inbox", "Gate", "v1", nil)
+	entry.Service.ID = "Gate@Gate001#A"
+	entry.Service.Meta = map[string]string{consulServerIDKey: "Gate@Gate001"}
+	watcher.serviceHandler(1, []*api.ServiceEntry{entry})
+	node := watcher.services["Gate"][0].Nodes[0]
+	if node.ServerID != "Gate@Gate001" || node.InstanceID != "Gate@Gate001#A" {
+		t.Fatalf("watcher lost typed identities: %+v", node)
+	}
+}
+
 func TestUnhealthyServiceHandler(t *testing.T) {
 	watcher := newWatcher()
 	serviceEntry := newServiceEntry(

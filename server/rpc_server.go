@@ -119,13 +119,19 @@ func (s *rpcServer) ServiceRegister() error {
 	}
 
 	// register service
-	node := &registry.Node{
-		ID:       config.Name + "@" + config.ID,
-		Address:  addr,
-		Port:     port,
-		Metadata: config.Metadata,
+	metadata := make(map[string]string, len(config.Metadata)+2)
+	for key, value := range config.Metadata {
+		metadata[key] = value
 	}
-	s.id = node.ID
+	serverID := config.Name + "@" + config.ID
+	node := &registry.Node{
+		ServerID:   serverID,
+		InstanceID: s.InstanceID(),
+		Address:    addr,
+		Port:       port,
+		Metadata:   metadata,
+	}
+	s.id = serverID
 	node.Metadata["server"] = s.String()
 	node.Metadata["registry"] = config.Registry.String()
 
@@ -148,7 +154,7 @@ func (s *rpcServer) ServiceRegister() error {
 	s.Unlock()
 
 	if !registered {
-		log.Infof("Registering node %s", node.ID)
+		log.Infof("Registering node %s", node.InstanceID)
 	}
 
 	// create registry options
@@ -199,9 +205,9 @@ func (s *rpcServer) ServiceDeregister() error {
 	}
 
 	node := &registry.Node{
-		ID:      config.Name + "@" + config.ID,
-		Address: addr,
-		Port:    port,
+		InstanceID: s.InstanceID(),
+		Address:    addr,
+		Port:       port,
 	}
 
 	service := &registry.Service{
@@ -210,7 +216,7 @@ func (s *rpcServer) ServiceDeregister() error {
 		Nodes:   []*registry.Node{node},
 	}
 
-	log.Infof("Unregistering node: %s", node.ID)
+	log.Infof("Unregistering node: %s", node.InstanceID)
 	if err := config.Registry.Deregister(service); err != nil {
 		return err
 	}

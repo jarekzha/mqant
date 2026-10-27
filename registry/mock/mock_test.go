@@ -14,14 +14,14 @@ var (
 				Version: "1.0.0",
 				Nodes: []*registry.Node{
 					{
-						ID:      "foo-1.0.0-123",
-						Address: "localhost",
-						Port:    9999,
+						InstanceID: "foo-1.0.0-123",
+						Address:    "localhost",
+						Port:       9999,
 					},
 					{
-						ID:      "foo-1.0.0-321",
-						Address: "localhost",
-						Port:    9999,
+						InstanceID: "foo-1.0.0-321",
+						Address:    "localhost",
+						Port:       9999,
 					},
 				},
 			},
@@ -30,9 +30,9 @@ var (
 				Version: "1.0.1",
 				Nodes: []*registry.Node{
 					{
-						ID:      "foo-1.0.1-321",
-						Address: "localhost",
-						Port:    6666,
+						InstanceID: "foo-1.0.1-321",
+						Address:    "localhost",
+						Port:       6666,
 					},
 				},
 			},
@@ -41,9 +41,9 @@ var (
 				Version: "1.0.3",
 				Nodes: []*registry.Node{
 					{
-						ID:      "foo-1.0.3-345",
-						Address: "localhost",
-						Port:    8888,
+						InstanceID: "foo-1.0.3-345",
+						Address:    "localhost",
+						Port:       8888,
 					},
 				},
 			},
@@ -54,14 +54,14 @@ var (
 				Version: "default",
 				Nodes: []*registry.Node{
 					{
-						ID:      "bar-1.0.0-123",
-						Address: "localhost",
-						Port:    9999,
+						InstanceID: "bar-1.0.0-123",
+						Address:    "localhost",
+						Port:       9999,
 					},
 					{
-						ID:      "bar-1.0.0-321",
-						Address: "localhost",
-						Port:    9999,
+						InstanceID: "bar-1.0.0-321",
+						Address:    "localhost",
+						Port:       9999,
 					},
 				},
 			},
@@ -70,9 +70,9 @@ var (
 				Version: "latest",
 				Nodes: []*registry.Node{
 					{
-						ID:      "bar-1.0.1-321",
-						Address: "localhost",
-						Port:    6666,
+						InstanceID: "bar-1.0.1-321",
+						Address:    "localhost",
+						Port:       6666,
 					},
 				},
 			},
