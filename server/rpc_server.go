@@ -12,6 +12,7 @@ import (
 	mqrpc "github.com/jarekzha/mqant/rpc"
 	defaultrpc "github.com/jarekzha/mqant/rpc/base"
 	"github.com/jarekzha/mqant/utils/lib/addr"
+	"github.com/pborman/uuid"
 )
 
 type rpcServer struct {
@@ -23,15 +24,21 @@ type rpcServer struct {
 	registered bool
 	server     mqrpc.RPCServer
 	id         string
+	instanceID string
 	// graceful exit
 	wg sync.WaitGroup
 }
 
 func newRPCServer(opts ...Option) Server {
 	options := newOptions(opts...)
+	instanceID := uuid.New()
+	if instanceID == "" {
+		log.Panic("Create RPC server instance ID fail")
+	}
 	return &rpcServer{
-		opts: options,
-		exit: make(chan chan error),
+		opts:       options,
+		exit:       make(chan chan error),
+		instanceID: options.Name + "@" + options.ID + "#" + instanceID,
 	}
 }
 
@@ -252,6 +259,10 @@ func (s *rpcServer) OnDestroy() error {
 
 func (s *rpcServer) ID() string {
 	return s.id
+}
+
+func (s *rpcServer) InstanceID() string {
+	return s.instanceID
 }
 
 func (s *rpcServer) String() string {

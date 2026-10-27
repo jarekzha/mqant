@@ -108,7 +108,8 @@ type Module interface {
 type RPCModule interface {
 	context.Context
 	Module
-	GetServerID() string //模块类型
+	GetServerID() string   // 配置对应的逻辑模块 ID
+	GetInstanceID() string // 本次模块服务实例的唯一 ID
 	Invoke(moduleType string, _func string, params ...interface{}) (interface{}, error)
 	InvokeNR(moduleType string, _func string, params ...interface{}) error
 	InvokeArgs(moduleType string, _func string, ArgsType []string, args [][]byte) (interface{}, error)

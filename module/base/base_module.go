@@ -53,6 +53,14 @@ func (m *BaseModule) GetServerID() string {
 	return "no server"
 }
 
+// GetInstanceID 返回本次模块服务实例的唯一 ID。
+func (m *BaseModule) GetInstanceID() string {
+	if m.service != nil && m.service.Server() != nil {
+		return m.service.Server().InstanceID()
+	}
+	return ""
+}
+
 // GetApp module.App
 func (m *BaseModule) GetApp() module.App {
 	return m.App

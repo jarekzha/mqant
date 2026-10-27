@@ -24,7 +24,8 @@ type Server interface {
 	Stop() error
 	OnDestroy() error
 	String() string
-	ID() string
+	ID() string         // 配置对应的逻辑模块 ID，格式为 Name@ID
+	InstanceID() string // 本次服务实例的唯一 ID，同一实例内保持不变
 }
 
 // Message RPC消息头
