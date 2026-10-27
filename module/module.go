@@ -100,6 +100,7 @@ type Module interface {
 	OnAppConfigurationLoaded(app App)            //当App初始化时调用，这个接口不管这个模块是否在这个进程运行都会调用
 	OnConfChanged(settings *conf.ModuleSettings) //为以后动态服务发现做准备
 	OnInit(app App, settings *conf.ModuleSettings)
+	OnReady() // 完整 OnInit 成功后发布服务，失败必须 panic
 	OnDestroy()
 	GetApp() App
 	Run(closeSig chan bool)

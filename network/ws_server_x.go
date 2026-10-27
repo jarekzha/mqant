@@ -78,7 +78,7 @@ func (handler *WSHandler) echo(conn *websocket.Conn) {
 func (server *WSServer) Start() {
 	ln, err := net.Listen("tcp", server.Addr)
 	if err != nil {
-		log.Warn("Tcp listen fail", log.Err(err))
+		log.Panic("Tcp listen fail", log.Err(err))
 	}
 
 	if server.HTTPTimeout <= 0 {
@@ -86,7 +86,7 @@ func (server *WSServer) Start() {
 		log.Warn("invalid HTTPTimeout, reset to defaul", log.Duration("defaul", server.HTTPTimeout))
 	}
 	if server.NewAgent == nil {
-		log.Warn("NewAgent must not be nil")
+		log.Panic("NewAgent must not be nil")
 	}
 	if server.TLS {
 		tlsConf := new(tls.Config)
@@ -96,7 +96,7 @@ func (server *WSServer) Start() {
 			ln = tls.NewListener(ln, tlsConf)
 			log.Info("WS Listen TLS load success")
 		} else {
-			log.Warn("Load ws_server tls fail", log.Err(err))
+			log.Panic("Load ws_server tls fail", log.Err(err))
 		}
 	}
 	server.ln = ln

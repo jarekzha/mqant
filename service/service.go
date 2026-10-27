@@ -125,14 +125,24 @@ func (s *service) Stop() error {
 	return gerr
 }
 
+// deprecated use Start and Wait instead
 func (s *service) Run() error {
 	if err := s.Start(); err != nil {
 		return err
 	}
 
+	return s.Wait()
+}
+
+// Wait maintains registration after a successful synchronous Start.
+func (s *service) Wait() error {
 	// start reg loop
 	ex := make(chan bool)
-	go s.run(ex)
+	stopped := make(chan struct{})
+	go func() {
+		defer close(stopped)
+		s.run(ex)
+	}()
 
 	//ch := make(chan os.Signal, 1)
 	//signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
@@ -146,5 +156,6 @@ func (s *service) Run() error {
 
 	// exit reg loop
 	close(ex)
+	<-stopped // 先停止续期，避免注销之后又重新注册
 	return s.Stop()
 }

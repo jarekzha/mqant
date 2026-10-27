@@ -37,6 +37,7 @@ func newRPCServer(opts ...Option) Server {
 	}
 	return &rpcServer{
 		opts:       options,
+		id:         options.Name + "@" + options.ID,
 		exit:       make(chan chan error),
 		instanceID: options.Name + "@" + options.ID + "#" + instanceID,
 	}
@@ -68,9 +69,6 @@ func (s *rpcServer) OnInit(module module.Module, app module.App, settings *conf.
 	}
 	s.server = server
 	s.opts.Address = server.Addr()
-	if err := s.ServiceRegister(); err != nil {
-		return err
-	}
 	return nil
 }
 func (s *rpcServer) SetListener(listener mqrpc.RPCListener) {
@@ -131,7 +129,6 @@ func (s *rpcServer) ServiceRegister() error {
 		Port:       port,
 		Metadata:   metadata,
 	}
-	s.id = serverID
 	node.Metadata["server"] = s.String()
 	node.Metadata["registry"] = config.Registry.String()
 

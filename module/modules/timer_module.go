@@ -1,4 +1,5 @@
-/**
+/*
+*
 一定要记得在confin.json配置这个模块的参数,否则无法使用
 */
 package modules
@@ -36,6 +37,8 @@ func (m *Timer) OnInit(app module.App, settings *conf.ModuleSettings) {
 	//删除一个为执行的定时器, 参数为添加定时器传递的唯一标识
 	//timewheel.GetTimeWheel().RemoveTimer("baba")
 }
+
+func (m *Timer) OnReady() {}
 
 func (m *Timer) Run(closeSig chan bool) {
 	timewheel.GetTimeWheel().Start(closeSig)

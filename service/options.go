@@ -13,7 +13,9 @@ type Service interface {
 	Init(...Option)
 	Options() Options
 	Server() server.Server
-	Run() error
+	Start() error
+	Wait() error // Start 成功后续期，直到 Context 取消并注销
+	Run() error  // deprecated use Start and Wait instead
 	String() string
 }
 

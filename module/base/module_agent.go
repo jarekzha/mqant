@@ -33,6 +33,7 @@ type ModuleAgent struct {
 }
 
 func run(m *ModuleAgent) {
+	defer m.wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
 			if conf.LenStackBuf > 0 {
@@ -42,10 +43,10 @@ func run(m *ModuleAgent) {
 			} else {
 				log.Errorf("%v", r)
 			}
+			panic(r) // 记录后终止进程，不吞掉启动或运行失败
 		}
 	}()
 	m.mi.Run(m.closeSig)
-	m.wg.Done()
 }
 
 func destroy(m *ModuleAgent) {

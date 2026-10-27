@@ -11,6 +11,10 @@ func TestRPCServerInstanceIdentity(t *testing.T) {
 	first := NewServer(Name("Gate"), ID("Gate001"), Address("127.0.0.1:9000"), Registry(reg))
 	second := NewServer(Name("Gate"), ID("Gate001"), Address("127.0.0.1:9000"), Registry(reg))
 
+	if first.ID() != "Gate@Gate001" || second.ID() != "Gate@Gate001" {
+		t.Fatal("logical ID must be available before registration")
+	}
+
 	if first.InstanceID() == "" || second.InstanceID() == "" {
 		t.Fatal("service instances must have nonempty instance IDs")
 	}

@@ -48,11 +48,11 @@ func (server *TCPServer) Start() {
 func (server *TCPServer) init() {
 	ln, err := net.Listen("tcp", server.Addr)
 	if err != nil {
-		log.Warn("Tcp listen fail", log.Err(err))
+		log.Panic("Tcp listen fail", log.Err(err))
 	}
 
 	if server.NewAgent == nil {
-		log.Warn("NewAgent must not be nil")
+		log.Panic("NewAgent must not be nil")
 	}
 	if server.TLS {
 		tlsConf := new(tls.Config)
@@ -62,7 +62,7 @@ func (server *TCPServer) init() {
 			ln = tls.NewListener(ln, tlsConf)
 			log.Info("TCP Listen tls load success")
 		} else {
-			log.Warn("Load Tcp tls fail", log.Err(err))
+			log.Panic("Load Tcp tls fail", log.Err(err))
 		}
 	}
 

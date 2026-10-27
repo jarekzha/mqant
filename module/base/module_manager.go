@@ -58,7 +58,8 @@ func (mer *ModuleManager) RegisterRunMod(mi module.Module) {
 func (mer *ModuleManager) Init(app module.App, ProcessID string) {
 	log.Infof("This service ModuleGroup(ProcessID) is [%s]", ProcessID)
 	mer.app = app
-	mer.CheckModuleSettings() //配置文件规则检查
+	mer.CheckModuleSettings()          //配置文件规则检查
+	bootstrapCount := len(mer.runMods) // Timer 等基础设施必须先运行，供 OnInit 使用
 	for i := 0; i < len(mer.mods); i++ {
 		for Type, modSettings := range app.GetSettings().Module {
 			if mer.mods[i].mi.GetType() == Type {
@@ -83,6 +84,15 @@ func (mer *ModuleManager) Init(app module.App, ProcessID string) {
 			app.GetModuleInited()(app, m.mi)
 		}
 
+		m.mi.OnReady()
+		if i < bootstrapCount {
+			m.wg.Add(1)
+			go run(m)
+		}
+	}
+
+	// 全部模块就绪后才运行入口，避免 Gate 在后续模块初始化失败时继续接客。
+	for _, m := range mer.runMods[bootstrapCount:] {
 		m.wg.Add(1)
 		go run(m)
 	}

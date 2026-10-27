@@ -35,7 +35,8 @@ import (
 // BaseModule 默认的RPCModule实现
 type BaseModule struct {
 	context.Context
-	serviceStopeds chan bool
+	serviceStarted bool
+	serviceStopped chan bool
 	exit           context.CancelFunc
 	App            module.App
 	subclass       module.RPCModule
@@ -139,7 +140,7 @@ func (m *BaseModule) OnInit(subclass module.RPCModule, app module.App, settings 
 	server.Options().Metadata["pid"] = fmt.Sprintf("%v", os.Getpid())
 	ctx, cancel := context.WithCancel(context.Background())
 	m.exit = cancel
-	m.serviceStopeds = make(chan bool)
+	m.serviceStopped = make(chan bool)
 	m.service = service.NewService(
 		service.Server(server),
 		service.RegisterTTL(app.Options().RegisterTTL),
@@ -147,14 +148,22 @@ func (m *BaseModule) OnInit(subclass module.RPCModule, app module.App, settings 
 		service.Context(ctx),
 	)
 
+	m.GetServer().SetListener(m)
+}
+
+// OnReady 只在业务 OnInit 全部成功后同步发布服务。
+func (m *BaseModule) OnReady() {
+	if err := m.service.Start(); err != nil {
+		log.Panic("Service start fail", log.String("serverID", m.GetServerID()), log.Err(err))
+	}
+	m.serviceStarted = true
 	go func() {
-		err := m.service.Run()
-		if err != nil {
+		defer close(m.serviceStopped)
+		if err := m.service.Wait(); err != nil {
 			log.Warn("service run fail", log.String("serverID", m.GetServerID()), log.Err(err))
 		}
-		close(m.serviceStopeds)
 	}()
-	m.GetServer().SetListener(m)
+	log.Info("Module ready", log.String("serverID", m.GetServerID()), log.String("instanceID", m.GetInstanceID()))
 }
 
 // OnDestroy 当模块注销时调用
@@ -162,9 +171,8 @@ func (m *BaseModule) OnDestroy() {
 	//注销模块
 	//一定别忘了关闭RPC
 	m.exit()
-	select {
-	case <-m.serviceStopeds:
-		//等待注册中心注销完成
+	if m.serviceStarted {
+		<-m.serviceStopped // 等待注册中心注销完成
 	}
 	_ = m.GetServer().OnDestroy()
 }
