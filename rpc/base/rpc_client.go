@@ -113,7 +113,6 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, ArgsType []strin
 		}
 		return result, nil
 	case <-ctx.Done():
-		c.close_callback_chan(callback)
 		c.nats_client.Delete(rpcInfo.Cid)
 		return nil, errors.New("deadline exceeded")
 		//case <-time.After(time.Second * time.Duration(c.app.GetSettings().rpc.RPCExpired)):

@@ -32,10 +32,11 @@ import (
 type NatsClient struct {
 	//callinfos map[string]*ClinetCallInfo
 	callinfos         *mqanttools.BeeMap
-	cmutex            sync.Mutex //操作callinfos的锁
+	cmutex            sync.Mutex // 保护关闭状态、订阅和回调归属
 	callbackqueueName string
 	app               module.App
-	done              chan error
+	done              chan struct{}
+	stopped           chan struct{}
 	subs              *nats.Subscription
 	isClose           bool
 	session           module.ServerSession
@@ -47,7 +48,8 @@ func NewNatsClient(app module.App, session module.ServerSession) (client *NatsCl
 	client.app = app
 	client.callinfos = mqanttools.NewBeeMap()
 	client.callbackqueueName = nats.NewInbox()
-	client.done = make(chan error)
+	client.done = make(chan struct{})
+	client.stopped = make(chan struct{})
 	client.isClose = false
 	client.subs, err = subscribeNatsReady(app.Transport(), client.callbackqueueName)
 	if err != nil {
@@ -58,36 +60,50 @@ func NewNatsClient(app module.App, session module.ServerSession) (client *NatsCl
 }
 
 func (c *NatsClient) Delete(key string) (err error) {
+	c.cmutex.Lock()
+	defer c.cmutex.Unlock()
 	c.callinfos.Delete(key)
-	return
+	return nil
 }
 func (c *NatsClient) CloseFch(fch chan *rpcpb.ResultInfo) {
 	defer func() {
 		if recover() != nil {
-			// close(ch) panic occur
+			// 保留兼容保护；内部通过回调归属保证只关闭一次。
 		}
 	}()
-
-	close(fch) // panic if ch is closed
+	close(fch)
 }
-func (c *NatsClient) Done() (err error) {
-	//关闭amqp链接通道
-	//close(c.send_chan)
-	//c.send_done<-nil
 
-	//清理 callinfos 列表
-	for key, clinetCallInfo := range c.callinfos.Items() {
-		if clinetCallInfo != nil {
-			//关闭管道
-			c.CloseFch(clinetCallInfo.(ClinetCallInfo).call)
-			//从Map中删除
+// stop 先发布关闭状态，再取消订阅，禁止接收循环在退出时重建订阅。
+func (c *NatsClient) stop() {
+	c.cmutex.Lock()
+	defer c.cmutex.Unlock()
+	if c.isClose {
+		return
+	}
+	c.isClose = true
+	close(c.done)
+	_ = c.subs.Unsubscribe()
+}
+
+func (c *NatsClient) Done() error {
+	c.stop()
+	<-c.stopped
+	return nil
+}
+
+// finish 在接收协程退出时释放剩余调用，Done 返回后不再有回调写入。
+func (c *NatsClient) finish() {
+	c.stop()
+	c.cmutex.Lock()
+	for key, info := range c.callinfos.Items() {
+		if info != nil {
+			c.CloseFch(info.(ClinetCallInfo).call)
 			c.callinfos.Delete(key)
 		}
 	}
-	c.callinfos = nil
-	c.done <- nil
-	c.isClose = true
-	return
+	c.cmutex.Unlock()
+	close(c.stopped)
 }
 
 /*
@@ -95,24 +111,26 @@ func (c *NatsClient) Done() (err error) {
 消息请求
 */
 func (c *NatsClient) Call(callInfo *mqrpc.CallInfo, callback chan *rpcpb.ResultInfo) error {
-	//var err error
-	if c.callinfos == nil {
-		return fmt.Errorf("AMQPClient is closed")
+	c.cmutex.Lock()
+	defer c.cmutex.Unlock()
+	if c.isClose {
+		return fmt.Errorf("NatsClient is closed")
 	}
 	callInfo.RPCInfo.ReplyTo = c.callbackqueueName
-	var correlation_id = callInfo.RPCInfo.Cid
-
-	clinetCallInfo := &ClinetCallInfo{
-		correlation_id: correlation_id,
-		call:           callback,
-		timeout:        callInfo.RPCInfo.Expired,
-	}
-	c.callinfos.Set(correlation_id, *clinetCallInfo)
 	body, err := c.Marshal(callInfo.RPCInfo)
 	if err != nil {
 		return err
 	}
-	return c.app.Transport().Publish(c.session.GetNode().Address, body)
+	correlationID := callInfo.RPCInfo.Cid
+	c.callinfos.Set(correlationID, ClinetCallInfo{
+		correlation_id: correlationID,
+		call:           callback,
+		timeout:        callInfo.RPCInfo.Expired,
+	})
+	if err = c.app.Transport().Publish(c.session.GetNode().Address, body); err != nil {
+		c.callinfos.Delete(correlationID)
+	}
+	return err
 }
 
 /*
@@ -120,6 +138,11 @@ func (c *NatsClient) Call(callInfo *mqrpc.CallInfo, callback chan *rpcpb.ResultI
 消息请求 不需要回复
 */
 func (c *NatsClient) CallNR(callInfo *mqrpc.CallInfo) error {
+	c.cmutex.Lock()
+	defer c.cmutex.Unlock()
+	if c.isClose {
+		return fmt.Errorf("NatsClient is closed")
+	}
 	body, err := c.Marshal(callInfo.RPCInfo)
 	if err != nil {
 		return err
@@ -132,6 +155,7 @@ func (c *NatsClient) CallNR(callInfo *mqrpc.CallInfo) error {
 接收应答信息
 */
 func (c *NatsClient) on_request_handle() (err error) {
+	defer c.finish()
 	defer func() {
 		if r := recover(); r != nil {
 			var rn = ""
@@ -149,34 +173,52 @@ func (c *NatsClient) on_request_handle() (err error) {
 			fmt.Println(errstr)
 		}
 	}()
-	go func() {
-		<-c.done
-		c.subs.Unsubscribe()
-	}()
-
-	for !c.isClose {
-		m, err := c.subs.NextMsg(time.Minute)
-		if err != nil && err == nats.ErrTimeout {
-			//fmt.Println(err.Error())
-			//log.Warning("NatsServer error with '%v'",err)
-			if !c.subs.IsValid() {
-				//订阅已关闭，需要重新订阅
-				c.subs, err = c.app.Transport().SubscribeSync(c.callbackqueueName)
-				if err != nil {
-					log.Error("NatsClient SubscribeSync[1] error", log.Err(err))
-					continue
+	for {
+		select {
+		case <-c.done:
+			return nil
+		default:
+		}
+		// 只有此协程重建订阅；stop 在同一把锁下取消当前订阅。
+		c.cmutex.Lock()
+		sub := c.subs
+		c.cmutex.Unlock()
+		m, err := sub.NextMsg(time.Minute)
+		if err != nil {
+			c.cmutex.Lock()
+			if c.isClose {
+				c.cmutex.Unlock()
+				return nil
+			}
+			if err != nats.ErrTimeout {
+				log.Error("NatsClient receive reply fail",
+					log.String("instanceID", c.session.GetInstanceID()),
+					log.String("subscription", c.callbackqueueName), log.Err(err))
+			}
+			if c.app.Transport().IsClosed() {
+				c.cmutex.Unlock()
+				return err
+			}
+			if !sub.IsValid() {
+				var replacement *nats.Subscription
+				replacement, err = subscribeNatsReady(c.app.Transport(), c.callbackqueueName)
+				if err == nil {
+					c.subs = replacement
+				} else {
+					log.Error("NatsClient restore reply subscription fail",
+						log.String("instanceID", c.session.GetInstanceID()),
+						log.String("subscription", c.callbackqueueName), log.Err(err))
 				}
 			}
-			continue
-		} else if err != nil {
-			fmt.Println(fmt.Sprintf("%v rpcclient error: %v", time.Now().String(), err.Error()))
-			log.Errorf("NatsClient error with '%v'", err)
-			if !c.subs.IsValid() {
-				//订阅已关闭，需要重新订阅
-				c.subs, err = c.app.Transport().SubscribeSync(c.callbackqueueName)
-				if err != nil {
-					log.Error("NatsClient SubscribeSync[2] fail", log.Err(err))
-					continue
+			c.cmutex.Unlock()
+			if err != nil && err != nats.ErrTimeout {
+				// 重建失败时退避，避免断线期间空转刷日志；关闭可立即打断。
+				timer := time.NewTimer(100 * time.Millisecond)
+				select {
+				case <-c.done:
+					timer.Stop()
+					return nil
+				case <-timer.C:
 				}
 			}
 			continue
@@ -185,24 +227,25 @@ func (c *NatsClient) on_request_handle() (err error) {
 		resultInfo, err := c.UnmarshalResult(m.Data)
 		if err != nil {
 			log.Error("Unmarshal fail", log.Err(err))
-		} else {
-			correlation_id := resultInfo.Cid
-			clinetCallInfo := c.callinfos.Get(correlation_id)
-			//删除
-			c.callinfos.Delete(correlation_id)
-			if clinetCallInfo != nil {
-				if clinetCallInfo.(ClinetCallInfo).call != nil {
-					clinetCallInfo.(ClinetCallInfo).call <- resultInfo
-					c.CloseFch(clinetCallInfo.(ClinetCallInfo).call)
-				}
-			} else {
-				//可能客户端已超时了，但服务端处理完还给回调了
-				log.Warnf("rpc callback no found : [%s]", correlation_id)
+			continue
+		}
+		c.cmutex.Lock()
+		info := c.callinfos.Get(resultInfo.Cid)
+		c.callinfos.Delete(resultInfo.Cid)
+		c.cmutex.Unlock()
+		if info == nil {
+			log.Warnf("rpc callback no found : [%s]", resultInfo.Cid)
+			continue
+		}
+		// 取出后由接收协程独占回调，超时方只删除映射，不再关闭通道。
+		if callback := info.(ClinetCallInfo).call; callback != nil {
+			select {
+			case callback <- resultInfo:
+			case <-c.done:
 			}
+			c.CloseFch(callback)
 		}
 	}
-
-	return nil
 }
 
 func (c *NatsClient) UnmarshalResult(data []byte) (*rpcpb.ResultInfo, error) {
