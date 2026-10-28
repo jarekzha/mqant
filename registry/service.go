@@ -11,6 +11,7 @@ type Service struct {
 
 // Node 服务节点信息
 type Node struct {
+	StartedAt  int64             `json:"started_at"`  // 实例创建时间（UnixNano），续注册时保持不变
 	ServerID   string            `json:"server_id"`   // 配置对应的逻辑 ID
 	InstanceID string            `json:"instance_id"` // 每次启动唯一的实例 ID
 	Address    string            `json:"address"`

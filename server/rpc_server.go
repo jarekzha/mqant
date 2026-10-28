@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/jarekzha/mqant/conf"
 	"github.com/jarekzha/mqant/log"
@@ -25,6 +26,7 @@ type rpcServer struct {
 	server     mqrpc.RPCServer
 	id         string
 	instanceID string
+	startedAt  int64
 	// graceful exit
 	wg sync.WaitGroup
 }
@@ -37,6 +39,7 @@ func newRPCServer(opts ...Option) Server {
 	}
 	return &rpcServer{
 		opts:       options,
+		startedAt:  time.Now().UnixNano(),
 		id:         options.Name + "@" + options.ID,
 		exit:       make(chan chan error),
 		instanceID: options.Name + "@" + options.ID + "#" + instanceID,
@@ -124,6 +127,7 @@ func (s *rpcServer) ServiceRegister() error {
 	serverID := config.Name + "@" + config.ID
 	node := &registry.Node{
 		ServerID:   serverID,
+		StartedAt:  s.startedAt,
 		InstanceID: s.InstanceID(),
 		Address:    addr,
 		Port:       port,
@@ -151,7 +155,7 @@ func (s *rpcServer) ServiceRegister() error {
 	s.Unlock()
 
 	if !registered {
-		log.Infof("Registering node %s", node.InstanceID)
+		log.Infof("Registering node %s (startedAt=%d)", node.InstanceID, node.StartedAt)
 	}
 
 	// create registry options

@@ -351,7 +351,7 @@ func (app *DefaultApp) GetServerByID(serverID string) (module.ServerSession, err
 	if len(parts) != 2 {
 		return nil, errors.Errorf("serverID is error %v", serverID)
 	}
-	for _, candidate := range app.GetServersByType(parts[0]) {
+	for _, candidate := range app.getServersByType(parts[0], true) {
 		if candidate.GetID() != serverID {
 			continue
 		}
@@ -432,11 +432,18 @@ func (app *DefaultApp) GetServerBySelector(serviceName string, opts ...selector.
 
 // GetServersByType 通过服务类型获取服务实例列表
 func (app *DefaultApp) GetServersByType(serviceName string) []module.ServerSession {
+	return app.getServersByType(serviceName, false)
+}
+
+func (app *DefaultApp) getServersByType(serviceName string, latest bool) []module.ServerSession {
 	sessions := make([]module.ServerSession, 0)
 	services, err := app.opts.Selector.GetService(serviceName)
 	if err != nil {
 		log.Warn("GetServersByType fail", log.Err(err))
 		return sessions
+	}
+	if latest {
+		services = registry.LatestServices(services)
 	}
 	for _, service := range services {
 		//log.TInfo(nil,"GetServersByType3 %v %v",Type,service.Nodes)

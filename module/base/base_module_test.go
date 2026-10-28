@@ -5,9 +5,26 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/jarekzha/mqant/module"
+	"github.com/jarekzha/mqant/selector"
 	"github.com/jarekzha/mqant/server"
 	"github.com/jarekzha/mqant/service"
 )
+
+type readinessSelector struct {
+	selector.Selector
+	reset string
+}
+
+func (s *readinessSelector) Reset(name string) { s.reset = name }
+
+type readinessApp struct {
+	module.App
+	selector *readinessSelector
+}
+
+func (a *readinessApp) Options() module.Options    { return module.Options{Selector: a.selector} }
+func (s *readinessServer) Options() server.Options { return server.Options{Name: "Activity"} }
 
 type readinessServer struct {
 	server.Server
@@ -34,13 +51,17 @@ func TestBaseModulePublishesSynchronouslyAndCleansUp(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	server := &readinessServer{}
-	m := &BaseModule{service: service.NewService(service.Server(server), service.Context(ctx)), exit: cancel, serviceStopped: make(chan bool)}
+	sel := &readinessSelector{}
+	m := &BaseModule{App: &readinessApp{selector: sel}, service: service.NewService(service.Server(server), service.Context(ctx)), exit: cancel, serviceStopped: make(chan bool)}
 	if server.registered {
 		t.Fatal("service registered before OnReady")
 	}
 	m.OnReady()
 	if !server.registered || !m.serviceStarted {
 		t.Fatal("OnReady returned before registration")
+	}
+	if sel.reset != "Activity" {
+		t.Fatal("OnReady did not invalidate discovery candidates")
 	}
 	m.OnDestroy()
 	if server.registered || !server.stopped {

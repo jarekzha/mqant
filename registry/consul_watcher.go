@@ -100,6 +100,7 @@ func (cw *consulWatcher) serviceHandler(idx uint64, data interface{}) {
 
 		svc.Nodes = append(svc.Nodes, &Node{
 			InstanceID: id,
+			StartedAt:  decodeStartedAt(e.Service.Meta),
 			ServerID:   e.Service.Meta[consulServerIDKey],
 			Address:    address,
 			Port:       e.Service.Port,

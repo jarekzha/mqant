@@ -67,8 +67,8 @@ func TestConsulRegistrationHashesArePerInstance(t *testing.T) {
 		t.Fatal(err)
 	}
 	reg := &consulRegistry{Client: client, register: make(map[string]uint64)}
-	first := &Service{Name: "Gate", Version: "v1", Nodes: []*Node{{ServerID: "Gate@Gate001", InstanceID: "Gate@Gate001#A", Address: "inbox-A"}}}
-	second := &Service{Name: "Gate", Version: "v1", Nodes: []*Node{{ServerID: "Gate@Gate001", InstanceID: "Gate@Gate001#B", Address: "inbox-B"}}}
+	first := &Service{Name: "Gate", Version: "v1", Nodes: []*Node{{ServerID: "Gate@Gate001", InstanceID: "Gate@Gate001#A", StartedAt: 100, Address: "inbox-A"}}}
+	second := &Service{Name: "Gate", Version: "v1", Nodes: []*Node{{ServerID: "Gate@Gate001", InstanceID: "Gate@Gate001#B", StartedAt: 200, Address: "inbox-B"}}}
 
 	for _, service := range []*Service{first, second, first} {
 		if err := reg.Register(service, RegisterTTL(time.Minute)); err != nil {
@@ -83,6 +83,13 @@ func TestConsulRegistrationHashesArePerInstance(t *testing.T) {
 		t.Fatalf("discovery lost instances: %v, %v", services, err)
 	}
 	for _, node := range services[0].Nodes {
+		expected := int64(100)
+		if node.InstanceID == second.Nodes[0].InstanceID {
+			expected = 200
+		}
+		if node.StartedAt != expected {
+			t.Fatalf("startup time lost: %+v", node)
+		}
 		if node.ServerID != "Gate@Gate001" || !transport.live[node.InstanceID] {
 			t.Fatalf("discovery lost typed identities: %+v", node)
 		}

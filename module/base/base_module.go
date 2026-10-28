@@ -157,6 +157,9 @@ func (m *BaseModule) OnReady() {
 		log.Panic("Service start fail", log.String("serverID", m.GetServerID()), log.Err(err))
 	}
 	m.serviceStarted = true
+	// 本实例注册前，可能已经缓存了该模块类型的旧实例列表。
+	// 仅清除发现候选缓存，使下次查询重新读取注册中心，保留已有 logicalRoutes 绑定。
+	m.App.Options().Selector.Reset(m.service.Server().Options().Name)
 	go func() {
 		defer close(m.serviceStopped)
 		if err := m.service.Wait(); err != nil {

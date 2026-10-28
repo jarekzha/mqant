@@ -42,10 +42,10 @@ func (s *instanceSession) GetRPC() mqrpc.RPCClient { return s.rpc }
 func TestInstanceRoutingAndOldInstanceDeletion(t *testing.T) {
 	const logicalID = "Gate@Gate001"
 	first := &instanceSession{node: &registry.Node{
-		InstanceID: logicalID + "#A", ServerID: logicalID,
+		InstanceID: logicalID + "#A", ServerID: logicalID, StartedAt: 20,
 	}, rpc: &instanceRPC{}}
 	second := &instanceSession{node: &registry.Node{
-		InstanceID: logicalID + "#B", ServerID: logicalID,
+		InstanceID: logicalID + "#B", ServerID: logicalID, StartedAt: 10,
 	}, rpc: &instanceRPC{}}
 	sel := &instanceSelector{nodes: []*registry.Node{first.node, second.node}}
 	app := &DefaultApp{opts: module.Options{Selector: sel}}
@@ -101,5 +101,51 @@ func TestInstanceRoutingAndOldInstanceDeletion(t *testing.T) {
 	}
 	if _, err := app.GetServerByInstanceID(first.GetInstanceID()); err == nil {
 		t.Fatal("exact lookup fell back from a missing instance to the new one")
+	}
+}
+
+// 即使发现更新的实例，已有逻辑绑定仍保持不变。
+func TestLatestInitialRouteAndStickyReplacement(t *testing.T) {
+	const id = "Zone@Zone001"
+	a := &instanceSession{node: &registry.Node{ServerID: id, InstanceID: id + "#A", StartedAt: 10}, rpc: &instanceRPC{}}
+	b := &instanceSession{node: &registry.Node{ServerID: id, InstanceID: id + "#B", StartedAt: 20}, rpc: &instanceRPC{}}
+	sel := &instanceSelector{nodes: []*registry.Node{a.node}}
+	app := &DefaultApp{opts: module.Options{Selector: sel}}
+	app.serverList.Store(a.GetInstanceID(), a)
+	app.serverList.Store(b.GetInstanceID(), b)
+	got, err := app.GetServerByID(id)
+	if err != nil || got != a {
+		t.Fatalf("initial A: %v, %v", got, err)
+	}
+	sel.nodes = []*registry.Node{a.node, b.node}
+	got, err = app.GetServerByID(id)
+	if err != nil || got != a {
+		t.Fatal("new discovery replaced a live binding")
+	}
+	app.logicalRoutes.Delete(id)
+	got, err = app.GetServerByID(id)
+	if err != nil || got != b {
+		t.Fatalf("unbound route did not select latest B: %v, %v", got, err)
+	}
+	exact, err := app.GetServerByInstanceID(a.GetInstanceID())
+	if err != nil || exact != a {
+		t.Fatal("latest selection broke exact old lookup")
+	}
+	if got := app.GetServersByType("Zone"); len(got) != 2 {
+		t.Fatal("latest selection removed enumeration nodes")
+	}
+	app.Watcher(a.node)
+	got, err = app.GetServerByID(id)
+	if err != nil || got != b || b.rpc.closed != 0 {
+		t.Fatal("old deletion damaged B binding")
+	}
+	// 模拟另一个已绑定 A 的调用者，仅在 A 被删除后重新选择。
+	app.logicalRoutes.Store(id, a.GetInstanceID())
+	app.serverList.Store(a.GetInstanceID(), a)
+	sel.nodes = []*registry.Node{b.node}
+	app.Watcher(a.node)
+	got, err = app.GetServerByID(id)
+	if err != nil || got != b {
+		t.Fatalf("did not replace deleted A: %v, %v", got, err)
 	}
 }

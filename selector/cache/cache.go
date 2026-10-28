@@ -371,6 +371,8 @@ func (c *cacheSelector) Select(service string, opts ...selector.SelectOption) (s
 		return nil, err
 	}
 
+	services = registry.LatestServices(services)
+
 	// apply the filters
 	for _, filter := range sopts.Filters {
 		services = filter(services)
@@ -388,8 +390,11 @@ func (c *cacheSelector) Mark(service string, node *registry.Node, err error) {
 	return
 }
 
+// Reset 仅清除服务发现候选缓存，不影响 App 中已有的逻辑路由绑定。
 func (c *cacheSelector) Reset(service string) {
-	return
+	c.Lock()
+	defer c.Unlock()
+	c.del(service)
 }
 
 // Close stops the watcher and destroys the cache

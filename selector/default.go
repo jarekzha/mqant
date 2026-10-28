@@ -40,6 +40,8 @@ func (r *defaultSelector) Select(service string, opts ...SelectOption) (Next, er
 		return nil, err
 	}
 
+	services = registry.LatestServices(services)
+
 	// apply the filters
 	for _, filter := range sopts.Filters {
 		services = filter(services)

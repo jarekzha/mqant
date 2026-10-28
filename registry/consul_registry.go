@@ -7,8 +7,11 @@ import (
 	"net"
 	"net/http"
 	"runtime"
+	"strconv"
 	"sync"
 	"time"
+
+	"github.com/jarekzha/mqant/log"
 
 	consul "github.com/hashicorp/consul/api"
 	hash "github.com/mitchellh/hashstructure"
@@ -16,6 +19,21 @@ import (
 
 // consulServerIDKey transports the typed Node.ServerID through Consul.
 const consulServerIDKey = "server_id"
+const consulStartedAtKey = "started_at"
+
+// decodeStartedAt 将缺失或无效的启动时间按 0 处理，兼容旧版本注册信息。
+func decodeStartedAt(meta map[string]string) int64 {
+	value := meta[consulStartedAtKey]
+	if value == "" {
+		return 0
+	}
+	startedAt, err := strconv.ParseInt(value, 10, 64)
+	if err != nil || startedAt < 0 {
+		log.Warn("Invalid service startup time", log.String("startedAt", value))
+		return 0
+	}
+	return startedAt
+}
 
 type consulRegistry struct {
 	Address string
@@ -219,7 +237,7 @@ func (c *consulRegistry) Register(s *Service, opts ...RegisterOption) error {
 	// register the service
 	asr := &consul.AgentServiceRegistration{
 		ID:      node.InstanceID,
-		Meta:    map[string]string{consulServerIDKey: node.ServerID},
+		Meta:    map[string]string{consulServerIDKey: node.ServerID, consulStartedAtKey: strconv.FormatInt(node.StartedAt, 10)},
 		Name:    s.Name,
 		Tags:    tags,
 		Port:    node.Port,
@@ -315,6 +333,7 @@ func (c *consulRegistry) GetService(name string) ([]*Service, error) {
 
 		svc.Nodes = append(svc.Nodes, &Node{
 			InstanceID: id,
+			StartedAt:  decodeStartedAt(s.Service.Meta),
 			ServerID:   s.Service.Meta[consulServerIDKey],
 			Address:    address,
 			Port:       s.Service.Port,

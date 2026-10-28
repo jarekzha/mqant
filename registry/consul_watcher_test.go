@@ -26,9 +26,12 @@ func TestWatcherPreservesTypedNodeIdentity(t *testing.T) {
 	watcher := newWatcher()
 	entry := newServiceEntry("node", "inbox", "Gate", "v1", nil)
 	entry.Service.ID = "Gate@Gate001#A"
-	entry.Service.Meta = map[string]string{consulServerIDKey: "Gate@Gate001"}
+	entry.Service.Meta = map[string]string{consulServerIDKey: "Gate@Gate001", consulStartedAtKey: "123456789"}
 	watcher.serviceHandler(1, []*api.ServiceEntry{entry})
 	node := watcher.services["Gate"][0].Nodes[0]
+	if node.StartedAt != 123456789 {
+		t.Fatalf("watcher lost startup time: %+v", node)
+	}
 	if node.ServerID != "Gate@Gate001" || node.InstanceID != "Gate@Gate001#A" {
 		t.Fatalf("watcher lost typed identities: %+v", node)
 	}

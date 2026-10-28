@@ -43,6 +43,13 @@ func TestRPCServerInstanceIdentity(t *testing.T) {
 	seen := map[string]bool{}
 	for _, node := range services[0].Nodes {
 		seen[node.InstanceID] = true
+		expected := first.(*rpcServer).startedAt
+		if node.InstanceID == second.InstanceID() {
+			expected = second.(*rpcServer).startedAt
+		}
+		if node.StartedAt <= 0 || node.StartedAt != expected {
+			t.Fatalf("registration changed startup time: %+v", node)
+		}
 		if node.ServerID != "Gate@Gate001" {
 			t.Fatalf("logical ID missing from registration: %v", node.Metadata)
 		}
