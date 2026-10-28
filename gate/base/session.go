@@ -80,14 +80,20 @@ func NewSessionByMap(app module.App, data map[string]interface{}) (gate.Session,
 }
 
 func (sesAgent *sessionagent) GetIP() string {
+	sesAgent.lock.RLock()
+	defer sesAgent.lock.RUnlock()
 	return sesAgent.session.GetIP()
 }
 
 func (sesAgent *sessionagent) GetTopic() string {
+	sesAgent.lock.RLock()
+	defer sesAgent.lock.RUnlock()
 	return sesAgent.session.GetTopic()
 }
 
 func (sesAgent *sessionagent) GetNetwork() string {
+	sesAgent.lock.RLock()
+	defer sesAgent.lock.RUnlock()
 	return sesAgent.session.GetNetwork()
 }
 
@@ -168,13 +174,19 @@ func (sesAgent *sessionagent) LocalUserData() interface{} {
 }
 
 func (sesAgent *sessionagent) SetIP(ip string) {
+	sesAgent.lock.Lock()
 	sesAgent.session.IP = ip
+	sesAgent.lock.Unlock()
 }
 func (sesAgent *sessionagent) SetTopic(topic string) {
+	sesAgent.lock.Lock()
 	sesAgent.session.Topic = topic
+	sesAgent.lock.Unlock()
 }
 func (sesAgent *sessionagent) SetNetwork(network string) {
+	sesAgent.lock.Lock()
 	sesAgent.session.Network = network
+	sesAgent.lock.Unlock()
 }
 func (sesAgent *sessionagent) SetUserID(userid string) {
 	sesAgent.lock.Lock()

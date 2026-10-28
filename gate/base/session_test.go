@@ -94,3 +94,38 @@ func TestSessionagent_Serializable(t *testing.T) {
 	}()
 	wg.Wait()
 }
+
+// Metadata writers must use the same lock as getters, Clone and serialization.
+func TestSessionMetadataConcurrentAccess(t *testing.T) {
+	session, err := NewSessionByMap(nil, map[string]interface{}{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 10000; i++ {
+			session.SetIP("127.0.0.1")
+			session.SetTopic("Login")
+			session.SetNetwork("tcp")
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 10000; i++ {
+			session.GetIP()
+			session.GetTopic()
+			session.GetNetwork()
+			session.Clone()
+			if _, err := session.Serializable(); err != nil {
+				t.Error(err)
+				return
+			}
+		}
+	}()
+	wg.Wait()
+	if session.GetIP() != "127.0.0.1" || session.GetTopic() != "Login" || session.GetNetwork() != "tcp" {
+		t.Fatal("metadata setters lost their values")
+	}
+}
